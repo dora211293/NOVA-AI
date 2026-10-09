@@ -2,124 +2,241 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b1020">
-<title>NOVA — ブラウザAI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#04060d">
+<title>NOVA — ASSISTANT</title>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
---bg:#eef1fa;--panel:#ffffff;--ink:#141a2e;--sub:#6b7391;--line:#e0e5f3;--bot:#ffffff;--chip:#ecebfd;--chipink:#4b3fd1;--a1:#6c5ce7;--a2:#00b8d9;--shadow:0 6px 24px rgba(40,50,110,.10)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1020;--panel:#141a30;--ink:#eaeefc;--sub:#8c95b8;--line:#232b4a;--bot:#1a2140;--chip:#222a52;--chipink:#b9b2ff;--shadow:0 6px 24px rgba(0,0,0,.35)}}
-:root[data-theme="dark"]{--bg:#0b1020;--panel:#141a30;--ink:#eaeefc;--sub:#8c95b8;--line:#232b4a;--bot:#1a2140;--chip:#222a52;--chipink:#b9b2ff;--shadow:0 6px 24px rgba(0,0,0,.35)}
-*,*::before,*::after{box-sizing:inherit;-webkit-tap-highlight-color:transparent}
+:root{--bg:#04060d;--p:rgba(10,20,40,.66);--p2:rgba(14,26,52,.86);--line:rgba(120,190,255,.17);--ink:#e8f4ff;--sub:#7f94b6;--a:#4de1ff;--a2:#7b6bff;--ok:#4dffb0;--bad:#ff6b8a;--mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;--glow:0 0 18px color-mix(in srgb,var(--a) 30%,transparent)}
+:root[data-accent=violet]{--a:#a78bff;--a2:#ff6bd6}
+:root[data-accent=amber]{--a:#ffc14d;--a2:#ff7a4d}
+:root[data-accent=green]{--a:#4dffb0;--a2:#4de1ff}
+:root[data-accent=pink]{--a:#ff6bb5;--a2:#ffb36b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0;overflow:hidden}
-body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;font-size:16px;line-height:1.55;overscroll-behavior:none}
-body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(60% 40% at 15% 0%,rgba(108,92,231,.18),transparent 70%),radial-gradient(50% 35% at 100% 100%,rgba(0,184,217,.14),transparent 70%)}
-#app{position:relative;display:flex;flex-direction:column;height:var(--vh,100%);max-width:760px;margin:0 auto}
-header{display:flex;align-items:center;gap:12px;padding:10px 14px;background:color-mix(in srgb,var(--panel) 80%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.orb{width:38px;height:38px;border-radius:50%;flex:none;background:conic-gradient(from 0deg,#6c5ce7,#00b8d9,#ff7ac6,#6c5ce7);filter:saturate(1.2);animation:spin 6s linear infinite;position:relative}
-.orb::after{content:"";position:absolute;inset:3px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.85),rgba(255,255,255,.1) 60%,transparent)}
-.thinking .orb{animation-duration:1.2s}
-@keyframes spin{to{transform:rotate(360deg)}}
-.ttl{flex:1;min-width:0}.ttl b{display:block;font-size:17px;letter-spacing:.08em}.ttl small{color:var(--sub);font-size:12px}
-.ib{width:44px;height:44px;border:0;border-radius:14px;background:transparent;color:var(--ink);font-size:20px;cursor:pointer;display:grid;place-items:center}
-.ib:active{background:var(--chip)}
-#log{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:16px 14px 8px;scroll-behavior:smooth}
-.row{display:flex;flex-direction:column;margin:0 0 12px;animation:in .28s ease both}
-.row.me{align-items:flex-end}.row.bot{align-items:flex-start}
-@keyframes in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
-.b{max-width:86%;padding:10px 14px;border-radius:20px;white-space:pre-wrap;word-break:break-word;box-shadow:var(--shadow)}
-.bot .b{background:var(--bot);border:1px solid var(--line);border-bottom-left-radius:6px}
-.me .b{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;border-bottom-right-radius:6px}
-.tag{font-size:11px;color:var(--sub);margin:3px 6px 0}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;max-width:92%}
-.chip{border:0;background:var(--chip);color:var(--chipink);padding:9px 14px;min-height:40px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer;transition:transform .15s}
-.chip:active{transform:scale(.94)}
-.dots{display:inline-flex;gap:5px;padding:4px 2px}.dots i{width:7px;height:7px;border-radius:50%;background:var(--sub);animation:bl 1s infinite}.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
-@keyframes bl{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-4px)}}
-form{display:flex;gap:8px;align-items:flex-end;padding:10px 12px 12px;background:color-mix(in srgb,var(--panel) 80%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line)}
-textarea{flex:1;resize:none;max-height:130px;min-height:46px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:23px;padding:11px 16px;font:inherit;font-size:16px;line-height:1.4;outline:none;transition:border-color .2s,box-shadow .2s}
-textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix(in srgb,var(--a1) 22%,transparent)}
-#send{width:46px;height:46px;border:0;border-radius:50%;flex:none;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:20px;cursor:pointer;transition:transform .15s,opacity .2s}
-#send:active{transform:scale(.9)}#send:disabled{opacity:.45}
-#scrim{position:fixed;inset:0;background:rgba(5,8,20,.5);opacity:0;pointer-events:none;transition:opacity .25s;z-index:5}
-#sheet{position:fixed;left:0;right:0;bottom:0;max-width:760px;margin:0 auto;background:var(--panel);border-radius:26px 26px 0 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:80%;overflow-y:auto;transform:translateY(105%);transition:transform .38s cubic-bezier(.2,.8,.2,1);z-index:6;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
-body.open #scrim{opacity:1;pointer-events:auto}body.open #sheet{transform:none}
-.grip{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
-#sheet h3{margin:14px 0 6px;font-size:13px;color:var(--sub);letter-spacing:.06em}
-.pl{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line)}
-.pl div{flex:1;min-width:0}.pl b{display:block;font-size:15px}.pl small{color:var(--sub);font-size:12.5px}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;overscroll-behavior:none}
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(70% 45% at 50% -5%,color-mix(in srgb,var(--a) 20%,transparent),transparent 70%),radial-gradient(60% 40% at 100% 100%,color-mix(in srgb,var(--a2) 16%,transparent),transparent 70%)}
+body::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse at 50% 25%,#000,transparent 72%);mask-image:radial-gradient(ellipse at 50% 25%,#000,transparent 72%)}
+#app{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;height:var(--vh,100dvh);max-width:780px;margin:0 auto}
+svg{display:block}
+/* header */
+header{display:flex;align-items:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 10px) 14px 6px}
+.core{width:54px;height:54px;flex:none;overflow:visible}
+.core circle{fill:none;stroke:var(--a);stroke-width:1.4;transform-origin:center;transform-box:fill-box}
+.r1{stroke-dasharray:3 7;opacity:.75;animation:rot 18s linear infinite}
+.r2{stroke:var(--a2)!important;stroke-dasharray:34 12;animation:rot 9s linear infinite reverse}
+.r3{stroke-dasharray:10 6 2 6;animation:rot 5s linear infinite}
+.core .dot{fill:var(--a);stroke:none;filter:drop-shadow(0 0 6px var(--a));animation:pulse 2.4s ease-in-out infinite}
+body[data-state=think] .r1{animation-duration:3s}body[data-state=think] .r2{animation-duration:1.8s}body[data-state=think] .r3{animation-duration:1s}body[data-state=think] .dot{animation-duration:.7s}
+@keyframes rot{to{transform:rotate(360deg)}}
+@keyframes pulse{50%{transform:scale(1.35);opacity:.7}}
+.core .dot{transform-origin:center;transform-box:fill-box}
+.ttl{flex:1;min-width:0}
+.ttl b{display:block;font:700 20px var(--mono);letter-spacing:.38em;background:linear-gradient(90deg,var(--a),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 8px color-mix(in srgb,var(--a) 40%,transparent))}
+.ttl small{display:block;font:500 10.5px var(--mono);letter-spacing:.16em;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ttl small::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok);margin-right:7px;box-shadow:0 0 8px var(--ok);vertical-align:1px}
+.hb{width:44px;height:44px;border:1px solid var(--line);background:var(--p);color:var(--a);border-radius:14px;display:grid;place-items:center;cursor:pointer}
+.hb svg{width:20px;height:20px}
+#pgline{height:2px;margin:0 14px;background:transparent;overflow:hidden;border-radius:2px}
+#pgline i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a),var(--a2));box-shadow:0 0 10px var(--a);transition:width .3s}
+/* HUD panel */
+#hud{margin:6px 12px 4px;padding:12px 14px;border:1px solid var(--line);background:var(--p);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-radius:18px;position:relative}
+#hud::before,#hud::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--a);filter:drop-shadow(0 0 4px var(--a))}
+#hud::before{left:-1px;top:-1px;border-right:0;border-bottom:0;border-radius:6px 0 0 0}
+#hud::after{right:-1px;bottom:-1px;border-left:0;border-top:0;border-radius:0 0 6px 0}
+.clk{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;cursor:pointer}
+#time{font:300 40px/1 var(--mono);letter-spacing:.04em;text-shadow:0 0 18px color-mix(in srgb,var(--a) 55%,transparent)}
+#time small{font-size:18px;color:var(--a);margin-left:4px}
+#time .c{animation:bl 1s steps(1) infinite;color:var(--a)}
+#date{font:500 12px var(--mono);letter-spacing:.1em;color:var(--sub);text-align:right}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;max-height:200px;transition:max-height .35s ease,margin .35s,opacity .35s;overflow:hidden}
+#hud.min .tiles{max-height:0;margin-top:0;opacity:0}
+.tile{position:relative;text-align:left;padding:8px 10px 9px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);border-radius:12px;font:inherit;cursor:pointer;overflow:hidden}
+.tile:active{background:color-mix(in srgb,var(--a) 14%,transparent)}
+.tile .k{display:block;font:600 9.5px var(--mono);letter-spacing:.18em;color:var(--sub)}
+.tile .v{display:block;font:600 14px/1.3 var(--mono);color:var(--ink);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .v.ok{color:var(--ok)}.tile .v.bad{color:var(--bad)}
+.tile i{position:absolute;left:0;bottom:0;height:2px;width:100%;background:transparent}
+.tile i b{display:block;height:100%;width:0;background:var(--a);box-shadow:0 0 8px var(--a);transition:width .4s}
+/* feed */
+#log{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px 14px 6px;scroll-behavior:smooth;scrollbar-width:none;-webkit-mask-image:linear-gradient(transparent,#000 14px,#000 calc(100% - 10px),transparent);mask-image:linear-gradient(transparent,#000 14px,#000 calc(100% - 10px),transparent)}
+#log::-webkit-scrollbar{display:none}
+.row{margin:0 0 14px;animation:in .38s cubic-bezier(.2,.8,.2,1) both}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.row.me{display:flex;justify-content:flex-end}
+.me .b{max-width:86%;padding:8px 14px;border:1px solid color-mix(in srgb,var(--a) 45%,transparent);background:color-mix(in srgb,var(--a) 10%,transparent);border-radius:14px 14px 3px 14px;font:14px/1.5 var(--mono);box-shadow:var(--glow);word-break:break-word;white-space:pre-wrap}
+.me .b::before{content:"› ";color:var(--a)}
+.card{position:relative;max-width:96%;padding:11px 14px 12px;background:var(--p);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:4px 16px 16px 16px}
+.card::before,.card::after{content:"";position:absolute;width:12px;height:12px;border:2px solid var(--a);filter:drop-shadow(0 0 4px var(--a))}
+.card::before{left:-1px;top:-1px;border-right:0;border-bottom:0;border-radius:4px 0 0 0}
+.card::after{right:-1px;bottom:-1px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+.tag{display:flex;align-items:center;gap:7px;font:600 10.5px var(--mono);letter-spacing:.22em;color:var(--a);margin-bottom:5px}
+.tag svg{width:14px;height:14px}
+.txt{white-space:pre-wrap;word-break:break-word}
+.txt:empty{display:none}
+.card.live .txt::after{content:"▍";color:var(--a);animation:bl 1s steps(1) infinite;margin-left:1px}
+@keyframes bl{50%{opacity:0}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.chip{border:1px solid color-mix(in srgb,var(--a) 50%,transparent);background:transparent;color:var(--a);padding:8px 13px;min-height:38px;border-radius:999px;font:600 12.5px var(--mono);letter-spacing:.04em;cursor:pointer}
+.chip:active{background:color-mix(in srgb,var(--a) 20%,transparent)}
+.eq{display:inline-flex;gap:3px;align-items:flex-end;height:14px}.eq i{width:3px;background:var(--a);border-radius:1px;animation:eq 1s ease-in-out infinite;box-shadow:0 0 6px var(--a)}.eq i:nth-child(2){animation-delay:.15s}.eq i:nth-child(3){animation-delay:.3s}.eq i:nth-child(4){animation-delay:.45s}
+@keyframes eq{0%,100%{height:3px}50%{height:14px}}
+.kvs{margin-top:6px}.kv{display:flex;justify-content:space-between;gap:14px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:13.5px}.kv:last-child{border:0}
+.kv span{font:600 10px var(--mono);letter-spacing:.16em;color:var(--sub);align-self:center;flex:none}.kv b{font-weight:600;text-align:right;word-break:break-word}
+.pw{font:600 17px var(--mono);letter-spacing:.04em;word-break:break-all;color:var(--ok);text-shadow:0 0 10px color-mix(in srgb,var(--ok) 40%,transparent);margin-top:6px}
+/* dock + input */
+.dock{display:flex;gap:8px;overflow-x:auto;padding:6px 14px 8px;scrollbar-width:none}
+.dock::-webkit-scrollbar{display:none}
+.q{flex:none;display:flex;align-items:center;gap:7px;padding:0 13px;min-height:40px;border:1px solid var(--line);background:var(--p);color:var(--ink);border-radius:12px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.q svg{width:16px;height:16px;color:var(--a)}
+.q:active{background:color-mix(in srgb,var(--a) 16%,transparent)}
+form{display:flex;align-items:flex-end;gap:8px;margin:0 12px calc(env(safe-area-inset-bottom,0px) + 10px);padding:6px 6px 6px 16px;border:1px solid color-mix(in srgb,var(--a) 42%,transparent);background:var(--p2);border-radius:28px;box-shadow:var(--glow);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.pr{align-self:center;color:var(--a);font:700 16px var(--mono)}
+textarea{flex:1;min-width:0;resize:none;max-height:120px;min-height:44px;border:0;background:transparent;color:var(--ink);padding:10px 0;font:inherit;font-size:16px;line-height:1.45;outline:none}
+textarea::placeholder{color:var(--sub)}
+#send{width:46px;height:46px;border:0;border-radius:50%;flex:none;background:linear-gradient(135deg,var(--a),var(--a2));color:#04060d;display:grid;place-items:center;cursor:pointer;box-shadow:0 0 16px color-mix(in srgb,var(--a) 50%,transparent);transition:transform .15s,opacity .2s}
+#send svg{width:20px;height:20px;stroke-width:2.2}
+#send:active{transform:scale(.9)}#send:disabled{opacity:.4}
+/* sheets */
+#scrim{position:fixed;inset:0;background:rgba(2,4,10,.62);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:5}
+body.sh #scrim{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:780px;margin:0 auto;z-index:6;max-height:88%;max-height:88dvh;overflow-y:auto;padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));background:linear-gradient(180deg,rgba(16,28,56,.97),rgba(7,12,26,.99));border:1px solid color-mix(in srgb,var(--a) 35%,transparent);border-bottom:0;border-radius:26px 26px 0 0;box-shadow:0 -12px 50px rgba(0,0,0,.5),0 -1px 24px color-mix(in srgb,var(--a) 22%,transparent);transform:translateY(106%);transition:transform .42s cubic-bezier(.2,.85,.2,1);overscroll-behavior:contain}
+.sheet.open{transform:none}
+.grip{width:42px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.vh{display:flex;align-items:center;gap:9px;color:var(--a);font:700 13px var(--mono);letter-spacing:.24em;margin-bottom:10px}.vh svg{width:18px;height:18px}
+.sheet h3{margin:16px 0 8px;font:600 10.5px var(--mono);letter-spacing:.22em;color:var(--sub)}
+.in{width:100%;min-height:46px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--ink);border-radius:12px;padding:0 14px;font:inherit;font-size:16px;outline:none;margin-bottom:8px;transition:border-color .2s,box-shadow .2s}
+.in:focus{border-color:var(--a);box-shadow:0 0 0 3px color-mix(in srgb,var(--a) 20%,transparent)}
+select.in{appearance:none;-webkit-appearance:none}
+.btn{min-height:46px;padding:0 16px;border-radius:12px;border:1px solid color-mix(in srgb,var(--a) 55%,transparent);background:color-mix(in srgb,var(--a) 12%,transparent);color:var(--a);font:600 13px var(--mono);letter-spacing:.08em;cursor:pointer;width:100%}
+.btn.pri{background:linear-gradient(135deg,var(--a),var(--a2));color:#04060d;border:0;box-shadow:0 0 16px color-mix(in srgb,var(--a) 40%,transparent)}
+.btn.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 55%,transparent);background:color-mix(in srgb,var(--bad) 10%,transparent)}
+.btn:disabled{opacity:.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.note{color:var(--sub);font-size:13px;margin:0 0 12px;white-space:pre-wrap}.err{color:var(--bad);font-size:13px;min-height:20px;margin-bottom:6px}
+.sws{display:flex;gap:12px}.sws button{width:40px;height:40px;border-radius:50%;border:2px solid transparent;cursor:pointer;background:var(--c);box-shadow:0 0 14px var(--c)}.sws button.on{border-color:#fff}
+.pl{display:flex;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid var(--line)}
+.pl div{flex:1;min-width:0}.pl b{display:block;font-size:14.5px}.pl small{color:var(--sub);font-size:12px}
 .sw{position:relative;width:50px;height:30px;flex:none}.sw input{opacity:0;position:absolute;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
-.sw span{position:absolute;inset:0;border-radius:15px;background:var(--line);transition:background .25s}.sw span::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:transform .25s}
-.sw input:checked+span{background:var(--a1)}.sw input:checked+span::after{transform:translateX(20px)}
-.btns{display:flex;gap:10px;margin-top:8px}.btns button{flex:1;min-height:46px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:14px;font:inherit;font-size:15px;cursor:pointer}
-#aibar{position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--panel) 55%,transparent);font-size:12.5px;color:var(--sub)}
-#boot{flex:none;border:0;min-height:38px;padding:0 14px;border-radius:999px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font:inherit;font-size:14px;cursor:pointer}
-#boot:disabled{opacity:.5}#aibar.ready #boot{display:none}#pgt{flex:1;min-width:0}
-.pg{position:absolute;left:0;right:0;bottom:0;height:3px}#pgi{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a1),var(--a2));transition:width .3s}
-select{width:100%;min-height:46px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:14px;padding:0 12px;font:inherit;font-size:16px}
-@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+.sw span{position:absolute;inset:0;border-radius:15px;background:var(--line);transition:background .25s}.sw span::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .25s}
+.sw input:checked+span{background:var(--a);box-shadow:0 0 12px var(--a)}.sw input:checked+span::after{transform:translateX(20px)}
+/* vault card */
+.vcard{margin-top:10px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035)}
+.vt{display:flex;align-items:center;justify-content:space-between}.vt b{color:var(--a);font-size:15px}
+.vr{display:flex;align-items:center;gap:6px;padding:2px 0}.vl{font:600 10px var(--mono);letter-spacing:.1em;color:var(--sub);width:24px;flex:none}
+.vv{flex:1;min-width:0;font:14px var(--mono);word-break:break-all}.vn{color:var(--sub);font-size:12.5px;margin-top:2px}
+.ibtn{width:38px;height:38px;border:0;background:transparent;color:var(--a);border-radius:10px;display:grid;place-items:center;cursor:pointer;flex:none}.ibtn svg{width:18px;height:18px}.ibtn:active{background:color-mix(in srgb,var(--a) 18%,transparent)}.ibtn.bad{color:var(--bad)}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-iteration-count:1!important;transition-duration:.01s!important}}
 </style>
 </head>
-<body>
+<body data-state="idle">
+<canvas id="bg"></canvas>
 <div id="app">
-  <header id="hd">
-    <div class="orb"></div>
-    <div class="ttl"><b>NOVA</b><small id="st">オフラインAI・端末内で動作</small></div>
-    <button class="ib" id="menu" aria-label="設定">⚙︎</button>
+  <header>
+    <svg class="core" viewBox="0 0 64 64"><circle class="r1" cx="32" cy="32" r="29"/><circle class="r2" cx="32" cy="32" r="22"/><circle class="r3" cx="32" cy="32" r="15"/><circle class="dot" cx="32" cy="32" r="6"/></svg>
+    <div class="ttl"><b>NOVA</b><small id="st">ASSISTANT SYSTEM // ONLINE</small></div>
+    <button class="hb" id="menu" type="button" aria-label="設定"></button>
   </header>
-  <div id="aibar"><button id="boot" type="button">🧠 AIを起動</button><span id="pgt">初回のみモデルをDL（以後はキャッシュ）</span><div class="pg"><i id="pgi"></i></div></div>
+  <div id="pgline"><i></i></div>
+  <section id="hud">
+    <div class="clk" id="clk"><div id="time">--:--</div><div id="date"></div></div>
+    <div class="tiles">
+      <button class="tile" type="button" data-go="none"><span class="k">BATTERY</span><span class="v" id="v-batt">--</span><i><b id="b-batt"></b></i></button>
+      <button class="tile" type="button" data-go="none"><span class="k">NETWORK</span><span class="v" id="v-net">--</span></button>
+      <button class="tile" type="button" data-go="ai"><span class="k">AI CORE</span><span class="v" id="v-ai">--</span><i><b id="b-ai"></b></i></button>
+      <button class="tile" type="button" data-go="todo"><span class="k">TASKS</span><span class="v" id="v-todo">--</span></button>
+      <button class="tile" type="button" data-go="timer"><span class="k">TIMER</span><span class="v" id="v-timer">--</span></button>
+      <button class="tile" type="button" data-go="vault"><span class="k">VAULT</span><span class="v" id="v-vault">--</span></button>
+    </div>
+  </section>
   <main id="log" aria-live="polite"></main>
+  <div class="dock" id="dock"></div>
   <form id="f" autocomplete="off">
-    <textarea id="in" rows="1" placeholder="メッセージを入力…" enterkeyhint="send"></textarea>
-    <button id="send" type="submit" aria-label="送信">➤</button>
+    <span class="pr">›</span>
+    <textarea id="in" rows="1" placeholder="指示を入力…" enterkeyhint="send"></textarea>
+    <button id="send" type="submit" aria-label="送信"></button>
   </form>
 </div>
 <div id="scrim"></div>
-<div id="sheet" role="dialog" aria-label="設定">
+<div class="sheet" id="sheet" role="dialog" aria-label="設定">
   <div class="grip"></div>
-  <h3>AIモデル（WebLLM）</h3>
-  <select id="model"></select>
-  <h3>機能プラグイン（ON/OFF）</h3>
+  <div class="vh" id="sh-h"></div>
+  <h3>AI CORE（WebLLM）</h3>
+  <select id="model" class="in"></select>
+  <button class="btn pri" id="boot" type="button">AIコアを起動</button>
+  <h3>ACCENT</h3>
+  <div class="sws" id="sws"></div>
+  <h3>MODULES</h3>
   <div id="pls"></div>
-  <h3>表示</h3>
-  <div class="btns"><button id="theme">テーマ切替</button><button id="clear">履歴を消去</button></div>
+  <h3>DATA</h3>
+  <div class="two"><button class="btn" id="vopen" type="button">金庫を開く</button><button class="btn bad" id="clear" type="button">履歴を消去</button></div>
 </div>
+<div class="sheet" id="vsheet" role="dialog" aria-label="金庫"><div class="grip"></div><div id="vbody"></div></div>
 
 <script>
 /* =====================================================================
-   NOVA — 外部APIなし・端末内完結のブラウザAI
+   NOVA ASSISTANT — 外部API不使用・端末内完結
    ---------------------------------------------------------------------
-   【拡張の仕方】 機能は「プラグイン」として NOVA.register() で追加します。
+   【機能の追加方法】
      NOVA.register({
-       id:'my-plugin', name:'表示名', desc:'説明', priority:50,
-       match(ctx){ return 0〜1 }          // 自分が答えるべき度合い（最大のものが採用）
-       run(ctx){ return '文字列' or {text, chips:['候補1','候補2']} } // async可
+       id:'my', name:'表示名', desc:'説明', tag:'LABEL', icon:'cpu', priority:50,
+       match(ctx){ return 0〜1 },            // 最大スコアのプラグインが実行される
+       run(ctx){ return '文字列' or {text, chips:[], render:()=>HTMLElement, secret:true} }
      });
-   ctx = { raw, text(正規化済), ai(NOVA), store(保存), kb }
-   フック: NOVA.use('before', ctx=>{}) / NOVA.use('after', ctx=>{})
-   将来: run() 内で WebLLM / Transformers.js / 自作モデルを呼べば
-         そのままAI機能として差し替え・追加できます。
+   ctx = { raw, text(正規化済), ai, store, onToken(ストリーム出力用) }
+   フック: NOVA.use('before'|'after', ctx=>{})
    ===================================================================== */
 (()=>{
 const $=s=>document.querySelector(s);
 const pick=a=>a[Math.floor(Math.random()*a.length)];
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const IC={
+ cpu:'<rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M19 9h3M19 15h3M2 9h3M2 15h3"/>',
+ send:'<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>',
+ sliders:'<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+ clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+ timer:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/>',
+ calc:'<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>',
+ todo:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+ lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+ key:'<circle cx="8" cy="15" r="4"/><path d="M10.8 12.2L21 2M16 7l3 3M18 5l2 2"/>',
+ dice:'<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 8h.01M16 8h.01M12 12h.01M8 16h.01M16 16h.01"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+ eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+ trash:'<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/>',
+ check:'<path d="M5 12l5 5L20 7"/>'
+};
+const ic=n=>'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(IC[n]||'')+'</svg>';
+const ib=(n,cls)=>{const b=el('button','ibtn'+(cls?' '+cls:''));b.type='button';b.innerHTML=ic(n);return b};
 
-/* ---- 永続化（失敗してもメモリで動く） ---- */
+/* ---- 永続化 ---- */
 const Store={m:{},get(k,d){try{const v=localStorage.getItem('nova:'+k);if(v!==null)return JSON.parse(v)}catch(e){}return k in this.m?this.m[k]:d},
   set(k,v){this.m[k]=v;try{localStorage.setItem('nova:'+k,JSON.stringify(v))}catch(e){}}};
 
-/* ---- 類似度（文字バイグラム Dice 係数） ---- */
+/* ---- 類似度 ---- */
 const bi=s=>{s=s.replace(/\s+/g,'');const r=new Set();for(let i=0;i<s.length-1;i++)r.add(s.slice(i,i+2));if(s.length===1)r.add(s);return r};
 const dice=(a,b)=>{if(!a.size||!b.size)return 0;let n=0;a.forEach(x=>b.has(x)&&n++);return 2*n/(a.size+b.size)};
+const p2=n=>String(n).padStart(2,'0');
+const WD=['日','月','火','水','木','金','土'];
+const dstr=d=>`${d.getMonth()+1}月${d.getDate()}日 ${WD[d.getDay()]}曜日`;
+const fmt=s=>[[3600,'時間'],[60,'分'],[1,'秒']].reduce((r,[n,u])=>{const v=Math.floor(s/n);s%=n;return v?r+v+u:r},'')||'0秒';
+const copy=(val,btn)=>{
+  const done=()=>{if(btn){btn.innerHTML=ic('check');setTimeout(()=>{btn.innerHTML=ic('copy')},1200)}setTimeout(()=>{try{navigator.clipboard.writeText('')}catch(e){}},30000)};
+  const fb=()=>{const t=el('textarea');t.value=val;t.style.cssText='position:fixed;opacity:0';document.body.appendChild(t);t.select();try{document.execCommand('copy');done()}catch(e){}t.remove()};
+  try{navigator.clipboard.writeText(val).then(done,fb)}catch(e){fb()}
+};
+function genPw(n){n=n||16;const cs='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*-_=+';let r;
+  do{const a=new Uint32Array(n);crypto.getRandomValues(a);r='';a.forEach(x=>r+=cs[x%cs.length])}while(n>=8&&!(/[a-z]/.test(r)&&/[A-Z]/.test(r)&&/\d/.test(r)&&/[^A-Za-z0-9]/.test(r)));return r}
 
 /* ---- コア ---- */
 const NOVA={
-  plugins:[],hooks:{before:[],after:[]},store:Store,say:null,
+  plugins:[],hooks:{before:[],after:[]},store:Store,timers:[],say:null,llmReady:false,
   register(p){p.priority=p.priority??50;this.plugins=this.plugins.filter(x=>x.id!==p.id).concat(p).sort((a,b)=>b.priority-a.priority);this.onChange&&this.onChange();return this},
   use(stage,fn){this.hooks[stage].push(fn);return this},
   enabled(id){return Store.get('off',[]).indexOf(id)<0},
-  norm(s){return s.normalize('NFKC').replace(/[×]/g,'*').replace(/[÷]/g,'/').trim()},
-  fallback(){return{text:pick(['うーん、まだその話題は勉強中です。','ごめんなさい、うまく理解できませんでした。','それはまだ苦手かもしれません…'])+'\n下のような事ならお任せください。',chips:(this.llmReady?[]:['AIを起動']).concat(['できること','サイコロ','3分タイマー','今何時？'])}},
+  norm(s){return s.normalize('NFKC').replace(/×/g,'*').replace(/÷/g,'/').trim()},
+  fallback(){return{tag:'NOVA',icon:'cpu',text:pick(['その指示は認識できませんでした。','コマンドを特定できませんでした。'])+(this.llmReady?'':'\nAIコアを起動すると、自由な質問にも答えられます。'),chips:(this.llmReady?[]:['AIを起動']).concat(['ブリーフィング','できること'])}},
   async respond(raw,onToken){
     const ctx={raw,text:this.norm(raw),ai:this,store:Store,kb:null,onToken};
     for(const h of this.hooks.before)await h(ctx);
@@ -127,85 +244,64 @@ const NOVA={
     for(const p of this.plugins){if(!this.enabled(p.id))continue;let s=0;try{s=+p.match(ctx)||0}catch(e){}if(s>bs){bs=s;best=p}}
     let out;
     if(best&&bs>0.3){try{out=await best.run(ctx)}catch(e){out='処理中にエラーが起きました。'}ctx.plugin=best.id}else out=this.fallback(ctx);
-    ctx.out=typeof out==='string'?{text:out}:out;
-    for(const h of this.hooks.after)await h(ctx);
-    return ctx.out;
+    out=typeof out==='string'?{text:out}:out;
+    if(best&&!out.tag){out.tag=best.tag||best.id.toUpperCase();out.icon=best.icon||'cpu'}
+    ctx.out=out;for(const h of this.hooks.after)await h(ctx);return ctx.out;
   }
 };
 window.NOVA=NOVA;
 
-/* ===================== 標準プラグイン ===================== */
-const KB=[
- {k:['あなたは誰','自己紹介','君は誰','名前は何','何者'],a:'私はNOVA。あなたの端末の中だけで動くAIです。外部サーバーには一切通信しません。'},
- {k:['できること','何ができる','機能','使い方','ヘルプ','help'],a:'できること：\n・雑談／あいさつ\n・計算（例: 12*(3+4)）\n・時刻・日付\n・タイマー（例: 3分タイマー）\n・TODO管理（例: todo 牛乳を買う）\n・サイコロ／コイン／おみくじ\n・名前を覚える\n・知識Q&A\n⚙︎から機能のON/OFFもできます。'},
- {k:['プライバシー','送信','外部','オフライン','安全','通信'],a:'会話はこの端末のブラウザ内だけで処理・保存されます。外部APIやサーバーへの送信はありません。履歴は⚙︎から消去できます。'},
- {k:['拡張','機能追加','プラグイン','カスタマイズ','改造'],a:'NOVA.register({ id, name, match(ctx), run(ctx) }) で機能を追加できます。match が返すスコアが一番高いプラグインが応答します。run の中で WebLLM などのAIモデルを呼べば、そのままAI機能になります。'},
- {k:['ありがとう','感謝','助かった'],a:pick=>'どういたしまして！'},
- {k:['疲れた','しんどい','つらい'],a:'お疲れさまです。少し休憩しませんか？ 5分タイマーもセットできますよ。'},
- {k:['つまらない','暇','ひま'],a:'それならサイコロやおみくじで遊びませんか？'},
- {k:['天気','ニュース','株価'],a:'外部通信をしないので、天気やニュースは取得できません。将来プラグインで拡張できます。'},
- {k:['面白い話','ジョーク','笑わせて','冗談'],a:'「布団が吹っ飛んだ」…すみません、寒かったですね。'},
- {k:['AIとは','人工知能'],a:'AI（人工知能）は、学習や推論など人の知的な作業をコンピュータで行う技術の総称です。私はルールと類似度検索で動く軽量なAIです。'}
-];
-NOVA.register({id:'greet',name:'あいさつ',desc:'こんにちは等に反応',priority:60,
- match:c=>/^(こんにちは|こんばんは|おはよう|やあ|はじめまして|hello|hi|hey|ども)/i.test(c.text)?.85:0,
- run(c){const n=Store.get('name',''),h=new Date().getHours();const g=h<5?'こんばんは':h<11?'おはようございます':h<18?'こんにちは':'こんばんは';
-  return{text:`${g}${n?'、'+n+'さん':''}！何をお手伝いしましょう？`,chips:['できること','今何時？','サイコロ']}}});
+/* ---- システム情報 ---- */
+const Sys={batt:null,
+ async init(){try{if(navigator.getBattery){this.batt=await navigator.getBattery();['levelchange','chargingchange'].forEach(e=>this.batt.addEventListener(e,()=>UI.tiles()))}}catch(e){}UI.tiles()},
+ net(){const c=navigator.connection||{};return{on:navigator.onLine!==false,type:(c.effectiveType||'').toUpperCase()}},
+ battText(){const b=this.batt;return b?Math.round(b.level*100)+'%'+(b.charging?'（充電中）':''):'非対応'}};
 
-NOVA.register({id:'calc',name:'計算',desc:'四則演算・累乗・剰余',priority:90,
- match(c){return ext(c.text)?.95:0},
- run(c){const e=ext(c.text);let v;try{v=Function('"use strict";return ('+e.replace(/\^/g,'**')+')')()}catch(x){return'式がうまく読めませんでした。'}
-  if(typeof v!=='number'||!isFinite(v))return'計算できませんでした。';return`${e} = ${+v.toPrecision(12)}`}});
-function ext(t){const s=t.replace(/,/g,'');if(/\d{4}-\d{1,2}-\d{1,2}/.test(s))return null;const m=s.match(/[\d.(][\d.()\s+\-*\/%^]*[\d)]/);if(!m)return null;const e=m[0].trim();return/[+\-*\/%^]/.test(e.replace(/^\s*-/,''))&&/\d/.test(e)?e:null}
+/* ===================== 金庫（AES-GCM 暗号化） ===================== */
+const Vault={key:null,data:null,salt:'',w:[],adding:false,pre:'',idle:0,
+ enc:new TextEncoder(),dec:new TextDecoder(),
+ exists(){return !!Store.get('vault',null)},
+ b64(u){let s='';u.forEach(c=>s+=String.fromCharCode(c));return btoa(s)},
+ ub64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0))},
+ async derive(pass,salt){const km=await crypto.subtle.importKey('raw',this.enc.encode(pass),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:250000,hash:'SHA-256'},km,{name:'AES-GCM',length:256},false,['encrypt','decrypt'])},
+ async seal(){const iv=crypto.getRandomValues(new Uint8Array(12));const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},this.key,this.enc.encode(JSON.stringify(this.data)));
+  Store.set('vault',{v:1,salt:this.salt,iv:this.b64(iv),ct:this.b64(new Uint8Array(ct))})},
+ async create(pass){const s=crypto.getRandomValues(new Uint8Array(16));this.salt=this.b64(s);this.key=await this.derive(pass,s);this.data=[];await this.seal();this.opened()},
+ async unlock(pass){const v=Store.get('vault',null);const key=await this.derive(pass,this.ub64(v.salt));
+  const pt=await crypto.subtle.decrypt({name:'AES-GCM',iv:this.ub64(v.iv)},key,this.ub64(v.ct));
+  this.salt=v.salt;this.key=key;this.data=JSON.parse(this.dec.decode(pt));this.opened()},
+ opened(){this.touch();this.w.splice(0).forEach(r=>r(true));UI.tiles();UI.vault()},
+ touch(){clearTimeout(this.idle);this.idle=setTimeout(()=>this.lock(),180000)},
+ lock(){clearTimeout(this.idle);this.key=null;this.data=null;this.adding=false;
+  document.querySelectorAll('.vcard.live-secret').forEach(n=>{n.replaceWith(el('div','note','🔒 金庫がロックされたため結果を消去しました。'))});UI.tiles();UI.vault()},
+ ensure(){if(this.key){this.touch();return Promise.resolve(true)}return new Promise(r=>{this.w.push(r);UI.sheet('#vsheet')})},
+ async add(e){this.data.push(e);await this.seal();this.touch()},
+ async del(i){this.data.splice(i,1);await this.seal();this.touch()},
+ find(terms){return this.data.filter(e=>terms.some(w=>{w=w.toLowerCase();const s=e.s.toLowerCase();return s.includes(w)||w.includes(s)||(e.u||'').toLowerCase().includes(w)}))}
+};
 
-NOVA.register({id:'time',name:'日時',desc:'現在の時刻・日付・曜日',priority:70,
- match:c=>/(今何時|何時|時刻|日付|今日は|何曜日|何日|今の時間)/.test(c.text)&&!/タイマー|後/.test(c.text)?.85:0,
- run(c){const d=new Date();return`${d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'long'})}\n${d.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})} です。`}});
+function vcard(e,onDel,secretLive){
+ const c=el('div','vcard'+(secretLive?' live-secret':''));
+ const t=el('div','vt');t.appendChild(el('b',null,e.s));
+ if(onDel){const d=ib('trash','bad');let arm=false,tm;d.onclick=()=>{if(!arm){arm=true;d.textContent='削除?';d.style.width='auto';d.style.padding='0 10px';d.style.font='600 12px var(--mono)';tm=setTimeout(()=>{arm=false;d.innerHTML=ic('trash');d.style.cssText=''},2500)}else{clearTimeout(tm);onDel()}};t.appendChild(d)}
+ c.appendChild(t);
+ const row=(label,val,secret)=>{const r=el('div','vr');r.appendChild(el('span','vl',label));const v=el('span','vv',secret?'••••••••••':val);r.appendChild(v);
+  if(secret){const eye=ib('eye');let sh=false;eye.onclick=()=>{sh=!sh;v.textContent=sh?val:'••••••••••'};r.appendChild(eye)}
+  const cp=ib('copy');cp.onclick=()=>copy(val,cp);r.appendChild(cp);return r};
+ if(e.u)c.appendChild(row('ID',e.u,false));
+ if(e.p)c.appendChild(row('PW',e.p,true));
+ if(e.n)c.appendChild(el('div','vn',e.n));
+ return c}
 
-const dur=t=>{let s=0;t.replace(/(\d+(?:\.\d+)?)\s*(時間|分|秒)/g,(_,n,u)=>{s+=n*{'時間':3600,'分':60,'秒':1}[u]});return Math.round(s)};
-NOVA.register({id:'timer',name:'タイマー',desc:'「3分タイマー」など（画面を開いている間）',priority:85,
- match:c=>dur(c.text)>0&&/タイマー|後に|後で|知らせ|教えて/.test(c.text)?.95:0,
- run(c){const s=dur(c.text);if(s>86400)return'タイマーは24時間までです。';
-  setTimeout(()=>{c.ai.say&&c.ai.say('⏰ '+fmt(s)+'経ちました！');navigator.vibrate&&navigator.vibrate([200,100,200])},s*1000);
-  return`⏱ ${fmt(s)}のタイマーをセットしました。\n（このページを開いている間のみ動作します）`}});
-const fmt=s=>[[3600,'時間'],[60,'分'],[1,'秒']].reduce((r,[n,u])=>{const v=Math.floor(s/n);s%=n;return v?r+v+u:r},'');
-
-NOVA.register({id:'todo',name:'TODO',desc:'todo 〇〇 / 一覧 / 完了 1',priority:80,
- match(c){const t=c.text;return/^(todo|タスク|やること)\s*[:：]?\s*\S/i.test(t)||/(todo|タスク|やること).*(一覧|リスト|見せ)/i.test(t)||/^(完了|削除)\s*\d+/.test(t)?.95:0},
- run(c){const t=c.text;let L=Store.get('todos',[]),m;
-  if(m=t.match(/^(完了|削除)\s*(\d+)/)){const i=+m[2]-1;if(!L[i])return'その番号は見つかりません。';const x=L.splice(i,1)[0];Store.set('todos',L);return`「${x}」を${m[1]}しました。`+show(L)}
-  if(/(一覧|リスト|見せ)/.test(t)&&!/^(todo|タスク|やること)\s*[:：]\s*\S/i.test(t))return show(L);
-  m=t.match(/^(?:todo|タスク|やること)\s*[:：]?\s*(.+)/i);L.push(m[1]);Store.set('todos',L);return`追加しました：${m[1]}`+show(L)}});
-const show=L=>L.length?'\n\n📝 TODO\n'+L.map((x,i)=>`${i+1}. ${x}`).join('\n')+'\n（「完了 1」で削除）':'\n\nTODOは空です。';
-
-NOVA.register({id:'memo',name:'名前の記憶',desc:'「私の名前は〇〇」を覚える',priority:75,
- match:c=>/(私|僕|俺|わたし|ぼく|おれ)の名前は.+/.test(c.text)||/(私|僕|俺).*(名前).*(覚え|わかる|知って|誰)/.test(c.text)?.9:0,
- run(c){const m=c.text.match(/の名前は(.+?)(?:です|だよ|やで|っす|$)/);
-  if(m){Store.set('name',m[1].trim());return`${m[1].trim()}さんですね。覚えました！`}
-  const n=Store.get('name','');return n?`${n}さんですよね。覚えています。`:'まだ聞いていません。「私の名前は〇〇」と教えてください。'}});
-
-NOVA.register({id:'fun',name:'ゲーム',desc:'サイコロ・コイン・おみくじ',priority:65,
- match:c=>/(サイコロ|ダイス|コイン|コイントス|おみくじ|運勢)/.test(c.text)?.9:0,
- run(c){const t=c.text,ch=['もう一回','できること'];
-  if(/コイン/.test(t))return{text:'🪙 '+pick(['表','裏'])+' が出ました。',chips:['コイン','サイコロ']};
-  if(/おみくじ|運勢/.test(t))return{text:'🎴 '+pick(['大吉','中吉','小吉','吉','末吉','凶'])+'！',chips:['おみくじ','サイコロ']};
-  const n=+(t.match(/(\d+)\s*面/)||[0,6])[1]||6;return{text:`🎲 ${n}面ダイス：${1+Math.floor(Math.random()*n)}`,chips:['サイコロ','コイン']}}});
-
-NOVA.register({id:'knowledge',name:'知識Q&A',desc:'内蔵の知識ベースを類似度検索',priority:30,
- match(c){let best=0,hit=null;const tb=bi(c.text.toLowerCase());
-  for(const e of KB)for(const k of e.k){const s=c.text.toLowerCase().includes(k.toLowerCase())?.9:dice(tb,bi(k.toLowerCase()));if(s>best){best=s;hit=e}}
-  c.kb=hit;return best>=(LLM.engine?.85:.4)?best:0},
- run(c){const a=c.kb.a;return typeof a==='function'?pick(['どういたしまして！','お役に立てて嬉しいです。']):a}});
-
-/* ===================== WebLLM（端末内で動く言語モデル） ===================== */
+/* ===================== WebLLM ===================== */
 const WEBLLM_URLS=['https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm','https://esm.run/@mlc-ai/web-llm'];
-const LLM={engine:null,loading:false,history:[],id:Store.get('model','Qwen2.5-1.5B-Instruct-q4f16_1-MLC'),
+const LLM={engine:null,loading:false,pct:0,history:[],id:Store.get('model','Qwen2.5-1.5B-Instruct-q4f16_1-MLC'),
  models:[['Qwen2.5-0.5B-Instruct-q4f16_1-MLC','超軽量 Qwen2.5 0.5B（スマホ向け）'],['Qwen2.5-1.5B-Instruct-q4f16_1-MLC','標準 Qwen2.5 1.5B（日本語◎）'],['Llama-3.2-1B-Instruct-q4f16_1-MLC','Llama 3.2 1B'],['gemma-2-2b-it-q4f16_1-MLC','高品質 Gemma2 2B（重め）']],
- label(){const m=this.models.find(x=>x[0]===this.id);return m?m[1]:this.id},
  async load(){
   if(this.engine||this.loading)return;
   if(!navigator.gpu)throw new Error('このブラウザはWebGPU非対応です（最新のChrome/Edge/Safariで開いてください）');
-  this.loading=true;
+  this.loading=true;this.pct=0;UI.status();
   try{
    let wl;for(const u of WEBLLM_URLS){try{wl=await import(u);break}catch(e){}}
    if(!wl)throw new Error('WebLLMライブラリを読み込めませんでした（通信を確認してください）');
@@ -216,91 +312,270 @@ const LLM={engine:null,loading:false,history:[],id:Store.get('model','Qwen2.5-1.
  },
  async chat(text,onToken){
   const n=Store.get('name','');
-  const sys={role:'system',content:'あなたは「NOVA」という親切なAIアシスタントです。ユーザーと同じ言語で、短く分かりやすく答えてください。'+(n?'ユーザーの名前は'+n+'です。':'')};
+  const sys={role:'system',content:'あなたは「NOVA」という有能なパーソナルアシスタントです。結論から簡潔に、ユーザーと同じ言語で答えてください。雑談よりも、依頼の遂行と実用的な助言を優先します。'+(n?'ユーザーの名前は'+n+'です。':'')};
   this.history.push({role:'user',content:text});this.history=this.history.slice(-12);
   while(this.history.length&&this.history[0].role!=='user')this.history.shift();
-  const st=await this.engine.chat.completions.create({messages:[sys,...this.history],stream:true,temperature:.7,max_tokens:600});
+  const st=await this.engine.chat.completions.create({messages:[sys,...this.history],stream:true,temperature:.5,max_tokens:600});
   let t='';for await(const ch of st){t+=(ch.choices[0]&&ch.choices[0].delta&&ch.choices[0].delta.content)||'';onToken&&onToken(t)}
   this.history.push({role:'assistant',content:t});return t||'（応答が空でした）';
  }};
-NOVA.register({id:'llm',name:'AI会話（WebLLM）',desc:'端末内の言語モデル。他の機能に当てはまらない会話を担当',priority:20,
+
+/* ===================== 標準プラグイン ===================== */
+const KB=[
+ {k:['あなたは誰','自己紹介','君は誰','何者'],a:'私はNOVA。この端末の中だけで動く、あなた専用のアシスタントです。'},
+ {k:['できること','何ができる','機能','使い方','ヘルプ','help'],a:'主な機能：\n・ブリーフィング（日時・電池・通信・タスク等の一覧）\n・計算（例: 12*(3+4)）\n・タイマー（例: 3分タイマー）\n・TODO（例: todo 牛乳を買う）\n・金庫：ID/パスワードを暗号化保存し、「Gmailのパスワード」で呼び出し\n・パスワード生成（例: パスワード生成 20文字）\n・サイコロ／コイン／おみくじ\n・AIコア起動で自由な質問にも対応\n右上の設定から機能のON/OFFができます。'},
+ {k:['プライバシー','送信','外部','オフライン','安全','通信'],a:'処理も保存もこの端末内だけです。外部サーバーへ会話や金庫の中身は送信しません（AIモデルの初回ダウンロード時のみ通信します）。'},
+ {k:['拡張','機能追加','プラグイン','カスタマイズ','改造'],a:'NOVA.register({ id, name, tag, match(ctx), run(ctx) }) で機能を追加できます。match のスコアが最大のプラグインが実行されます。'},
+ {k:['ありがとう','感謝','助かった'],a:'どういたしまして。'},
+ {k:['天気','ニュース','株価'],a:'外部通信を行わないため、天気やニュースは取得できません。プラグインで拡張可能です。'}
+];
+NOVA.register({id:'brief',name:'ブリーフィング',desc:'日時・電池・通信・タスクなどの状況一覧',tag:'BRIEFING',icon:'sun',priority:60,
+ match:c=>/^(こんにちは|こんばんは|おはよう|おはよ|やあ|hello|hi|hey|ども)(?![a-z])/i.test(c.text)||/^(ブリーフィング|状況|ステータス|まとめ|今日の予定)/.test(c.text)?.9:0,
+ run(c){const n=Store.get('name',''),h=new Date().getHours();const g=h<5?'こんばんは':h<11?'おはようございます':h<18?'こんにちは':'こんばんは';
+  return{text:`${g}${n?'、'+n+'さん':''}。現在の状況です。`,render:briefNode,chips:['todo一覧','5分タイマー','金庫を開く']}}});
+function briefNode(){
+ const w=el('div','kvs');const kv=(k,v)=>{const r=el('div','kv');r.append(el('span',null,k),el('b',null,v));w.appendChild(r)};
+ const d=new Date();kv('DATE',dstr(d));kv('TIME',p2(d.getHours())+':'+p2(d.getMinutes()));
+ kv('BATTERY',Sys.battText());const n=Sys.net();kv('NETWORK',n.on?'ONLINE'+(n.type?' · '+n.type:''):'OFFLINE');
+ const td=Store.get('todos',[]);kv('TASKS',td.length?td.length+'件 ／ '+td.slice(0,2).join('、'):'なし');
+ kv('TIMER',NOVA.timers.length?NOVA.timers.map(t=>fmt(Math.max(0,Math.round((t.end-Date.now())/1000)))).join(' ／ '):'なし');
+ kv('VAULT',!Vault.exists()?'未作成':Vault.key?'解除中':'ロック中');kv('AI CORE',LLM.engine?'ACTIVE':'STANDBY');return w}
+
+NOVA.register({id:'calc',name:'計算',desc:'四則演算・累乗・剰余',tag:'CALC',icon:'calc',priority:90,
+ match:c=>ext(c.text)?.95:0,
+ run(c){const e=ext(c.text);let v;try{v=Function('"use strict";return ('+e.replace(/\^/g,'**')+')')()}catch(x){return'式がうまく読めませんでした。'}
+  if(typeof v!=='number'||!isFinite(v))return'計算できませんでした。';return`${e} = ${+v.toPrecision(12)}`}});
+function ext(t){const s=t.replace(/,/g,'');if(/\d{4}-\d{1,2}-\d{1,2}/.test(s))return null;const m=s.match(/[\d.(][\d.()\s+\-*\/%^]*[\d)]/);if(!m)return null;const e=m[0].trim();return/[+\-*\/%^]/.test(e.replace(/^\s*-/,''))&&/\d/.test(e)?e:null}
+
+NOVA.register({id:'time',name:'日時',desc:'現在の時刻・日付・曜日',tag:'CLOCK',icon:'clock',priority:70,
+ match:c=>/(今何時|何時|時刻|日付|今日は|何曜日|何日|今の時間)/.test(c.text)&&!/タイマー|後/.test(c.text)?.85:0,
+ run(){const d=new Date();return`${d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'long'})}\n${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`}});
+
+const dur=t=>{let s=0;t.replace(/(\d+(?:\.\d+)?)\s*(時間|分|秒)/g,(_,n,u)=>{s+=n*{'時間':3600,'分':60,'秒':1}[u]});return Math.round(s)};
+NOVA.register({id:'timer',name:'タイマー',desc:'「3分タイマー」「タイマー一覧」「タイマー停止」',tag:'TIMER',icon:'timer',priority:85,
+ match:c=>(dur(c.text)>0&&/タイマー|後に|後で|知らせ|教えて/.test(c.text))||/タイマー.*(一覧|確認|状況|止|消|キャンセル|解除)/.test(c.text)?.95:0,
+ run(c){const t=c.text,s=dur(t);
+  if(/(止|消|キャンセル|解除|やめ)/.test(t)){const n=NOVA.timers.length;NOVA.timers.forEach(x=>clearTimeout(x.h));NOVA.timers=[];UI.tiles();return n?`${n}件のタイマーを停止しました。`:'動作中のタイマーはありません。'}
+  if(!s)return NOVA.timers.length?'動作中：\n'+NOVA.timers.map(x=>`・${x.label}（残り ${fmt(Math.max(0,Math.round((x.end-Date.now())/1000)))}）`).join('\n'):'動作中のタイマーはありません。';
+  if(s>86400)return'タイマーは24時間までです。';
+  const o={id:Math.random(),end:Date.now()+s*1000,label:fmt(s)};
+  o.h=setTimeout(()=>{NOVA.timers=NOVA.timers.filter(x=>x.id!==o.id);UI.tiles();NOVA.say('⏰ '+o.label+'のタイマーが完了しました。');navigator.vibrate&&navigator.vibrate([250,120,250])},s*1000);
+  NOVA.timers.push(o);UI.tiles();return`${o.label}のタイマーを開始しました。\n（このページを開いている間のみ動作します）`}});
+
+NOVA.register({id:'todo',name:'TODO',desc:'todo 〇〇 ／ todo一覧 ／ 完了 1',tag:'TASKS',icon:'todo',priority:80,
+ match(c){const t=c.text;return/^(todo|タスク|やること)\s*[:：]?\s*\S/i.test(t)||/(todo|タスク|やること).*(一覧|リスト|見せ)/i.test(t)||/^(完了|削除)\s*\d+/.test(t)?.95:0},
+ run(c){const t=c.text;let L=Store.get('todos',[]),m;
+  if(m=t.match(/^(完了|削除)\s*(\d+)/)){const i=+m[2]-1;if(!L[i])return'その番号は見つかりません。';const x=L.splice(i,1)[0];Store.set('todos',L);UI.tiles();return`「${x}」を${m[1]}しました。`+show(L)}
+  if(/(一覧|リスト|見せ)/.test(t)&&!/^(todo|タスク|やること)\s*[:：]\s*\S/i.test(t))return show(L,1);
+  m=t.match(/^(?:todo|タスク|やること)\s*[:：]?\s*(.+)/i);L.push(m[1]);Store.set('todos',L);UI.tiles();return`追加しました：${m[1]}`+show(L)}});
+const show=(L,h)=>L.length?(h?'':'\n\n')+L.map((x,i)=>`${i+1}. ${x}`).join('\n')+'\n（「完了 1」で消去）':(h?'':'\n\n')+'タスクはありません。';
+
+NOVA.register({id:'memo',name:'名前の記憶',desc:'「私の名前は〇〇」を覚える',tag:'PROFILE',icon:'cpu',priority:75,
+ match:c=>/(私|僕|俺|わたし|ぼく|おれ)の名前は.+/.test(c.text)||/(私|僕|俺).*(名前).*(覚え|わかる|知って|誰)/.test(c.text)?.9:0,
+ run(c){const m=c.text.match(/の名前は(.+?)(?:です|だよ|やで|っす|$)/);
+  if(m){Store.set('name',m[1].trim());return`${m[1].trim()}さんで登録しました。`}
+  const n=Store.get('name','');return n?`${n}さんで登録されています。`:'未登録です。「私の名前は〇〇」と入力してください。'}});
+
+NOVA.register({id:'fun',name:'ゲーム',desc:'サイコロ・コイン・おみくじ',tag:'GAME',icon:'dice',priority:65,
+ match:c=>/(サイコロ|ダイス|コイン|おみくじ|運勢)/.test(c.text)?.9:0,
+ run(c){const t=c.text;
+  if(/コイン/.test(t))return{text:'🪙 '+pick(['表','裏']),chips:['コイン','サイコロ']};
+  if(/おみくじ|運勢/.test(t))return{text:'🎴 '+pick(['大吉','中吉','小吉','吉','末吉','凶']),chips:['おみくじ','サイコロ']};
+  const n=+(t.match(/(\d+)\s*面/)||[0,6])[1]||6;return{text:`🎲 ${n}面ダイス：${1+Math.floor(Math.random()*n)}`,chips:['サイコロ','コイン']}}});
+
+NOVA.register({id:'passgen',name:'パスワード生成',desc:'強力なランダムパスワードを生成',tag:'KEYGEN',icon:'key',priority:92,
+ match:c=>/(パスワード|password).*(生成|作|ランダム|考え)|(生成|作).*パスワード/i.test(c.text)?.95:0,
+ run(c){const n=Math.min(64,Math.max(8,+(c.text.match(/(\d+)\s*(文字|桁)/)||[0,16])[1]));const pw=genPw(n);
+  return{text:`${n}文字のパスワードを生成しました。`,secret:true,render(){const w=el('div');w.appendChild(el('div','pw',pw));const b=el('button','chip','コピー');b.type='button';b.style.marginTop='10px';b.onclick=()=>copy(pw,null);w.appendChild(b);return w},chips:['もう一度生成']}}});
+
+const VWORDS=/(金庫|vault|ログイン情報|ログイン|パスワード|アカウント|メアド|メールアドレス|メール)/i;
+function vterms(t){let s=t.replace(/(金庫|vault|ログイン情報|ログイン|パスワード|アカウント|メアド|メールアドレス|メール|教えて|見せて|出して|表示して?|呼び出して?|ください|知りたい|だっけ|開いて|開く|追加|保存|登録|記憶|覚えて)/gi,'');
+ s=s.replace(/[?？!！。、\s]+/g,' ').trim().replace(/^[のをはがにで\s]+|[のをはがにで\s]+$/g,'');return s?s.split(/[とや,&・\s]+/).filter(Boolean):[]}
+NOVA.register({id:'vault',name:'金庫',desc:'ID/パスワードを暗号化保存し、呼び出す',tag:'VAULT',icon:'lock',priority:88,
+ match:c=>VWORDS.test(c.text)?.9:0,
+ async run(c){const t=c.text,terms=vterms(t);
+  if(/(追加|保存|登録|記憶|覚え)/.test(t)){if(!await Vault.ensure())return'金庫は開きませんでした。';Vault.adding=true;Vault.pre=terms.join(' ');UI.vault();return'追加フォームを開きました。※パスワードはチャットではなく、フォームに入力してください。'}
+  if(!terms.length){await Vault.ensure();return Vault.key?'金庫を開きました。':'金庫は開きませんでした。'}
+  if(!await Vault.ensure())return'金庫は開きませんでした。';
+  UI.closeSheets();const r=Vault.find(terms);
+  if(!r.length)return{text:`「${terms.join(' ')}」は見つかりませんでした。`,chips:['金庫を開く','アカウントを追加']};
+  return{text:`${r.length}件見つかりました。コピーした内容は30秒後にクリップボードから消去します。`,secret:true,render(){const w=el('div');r.forEach(e=>w.appendChild(vcard(e,null,true)));return w}}}});
+
+NOVA.register({id:'knowledge',name:'知識Q&A',desc:'内蔵の知識ベースを類似度検索',tag:'INFO',icon:'cpu',priority:30,
+ match(c){let best=0,hit=null;const tb=bi(c.text.toLowerCase());
+  for(const e of KB)for(const k of e.k){const s=c.text.toLowerCase().includes(k.toLowerCase())?.9:dice(tb,bi(k.toLowerCase()));if(s>best){best=s;hit=e}}
+  c.kb=hit;return best>=(LLM.engine?.85:.4)?best:0},
+ run(c){return c.kb.a}});
+NOVA.register({id:'llm',name:'AIコア（WebLLM）',desc:'端末内の言語モデル。他の機能に当てはまらない質問を担当',tag:'AI CORE',icon:'cpu',priority:20,
  match:c=>LLM.engine?.65:0,
  async run(c){return{text:await LLM.chat(c.raw,c.onToken)}}});
-NOVA.register({id:'boot',name:'AI起動',desc:'「AIを起動」でWebLLMを起動',priority:95,
+NOVA.register({id:'boot',name:'AI起動',desc:'「AIを起動」でWebLLMを起動',tag:'SYSTEM',icon:'cpu',priority:95,
  match:c=>/AI.*(起動|開始|ロード|読み込)/i.test(c.text)?.95:0,
- run(){if(LLM.engine)return'AIはすでに起動しています。';startAI();return'🧠 AIを起動します。上のバーで進捗を確認してください。\n初回のみモデルをダウンロードします（以後はキャッシュ）。'}});
+ run(){if(LLM.engine)return'AIコアはすでに稼働中です。';startAI();return'AIコアを起動します。進捗はヘッダー下のラインに表示されます。\n初回のみモデルをダウンロードします（以後はキャッシュ）。'}});
 
 /* ===================== UI ===================== */
 const log=$('#log'),inp=$('#in'),send=$('#send');
-let hist=Store.get('hist',[]);
+let hist=Store.get('hist',[]),busy=false;
 const UI={
-  add(role,text,chips,save=true){
-    log.querySelectorAll('.chips').forEach(e=>e.remove());
-    const r=document.createElement('div');r.className='row '+role;
-    const b=document.createElement('div');b.className='b';b.textContent=text;r.appendChild(b);
-    if(chips&&chips.length){const w=document.createElement('div');w.className='chips';chips.forEach(t=>{const x=document.createElement('button');x.type='button';x.className='chip';x.textContent=t;x.onclick=()=>submit(t);w.appendChild(x)});r.appendChild(w)}
-    log.appendChild(r);this.bottom();
-    if(save){hist.push({r:role,t:text});hist=hist.slice(-60);Store.set('hist',hist)}
-  },
-  bottom(){requestAnimationFrame(()=>{log.scrollTop=log.scrollHeight})},
-  live(){log.querySelectorAll('.chips').forEach(e=>e.remove());const r=document.createElement('div');r.className='row bot';const b=document.createElement('div');b.className='b';r.appendChild(b);log.appendChild(r);return b},
-  finish(b,out){b.textContent=out.text;hist.push({r:'bot',t:out.text});hist=hist.slice(-60);Store.set('hist',hist);
-    if(out.chips&&out.chips.length){const w=document.createElement('div');w.className='chips';out.chips.forEach(t=>{const x=document.createElement('button');x.type='button';x.className='chip';x.textContent=t;x.onclick=()=>submit(t);w.appendChild(x)});b.parentNode.appendChild(w)}this.bottom()},
-  progress(p){$('#pgi').style.width=Math.round(p*100)+'%';$('#pgt').textContent='モデル読み込み中… '+Math.round(p*100)+'%'},
-  typing(on){let e=$('#typ');if(on&&!e){e=document.createElement('div');e.id='typ';e.className='row bot';e.innerHTML='<div class="b"><span class="dots"><i></i><i></i><i></i></span></div>';log.appendChild(e);this.bottom()}else if(!on&&e)e.remove();$('#hd').classList.toggle('thinking',on);$('#st').textContent=on?'考え中…':'オフラインAI・端末内で動作'},
-  plugins(){const off=Store.get('off',[]);const box=$('#pls');box.innerHTML='';
-    NOVA.plugins.slice().sort((a,b)=>a.name.localeCompare(b.name,'ja')).forEach(p=>{const d=document.createElement('div');d.className='pl';
-      d.innerHTML=`<div><b></b><small></small></div><label class="sw"><input type="checkbox"><span></span></label>`;
-      d.querySelector('b').textContent=p.name;d.querySelector('small').textContent=p.desc||'';
-      const cb=d.querySelector('input');cb.checked=off.indexOf(p.id)<0;
-      cb.onchange=()=>{let o=Store.get('off',[]).filter(x=>x!==p.id);if(!cb.checked)o.push(p.id);Store.set('off',o)};box.appendChild(d)})}
+ chipsEl(chips){const w=el('div','chips');chips.forEach(t=>{const x=el('button','chip',t);x.type='button';x.onclick=()=>submit(t);w.appendChild(x)});return w},
+ clearChips(){log.querySelectorAll('.chips').forEach(e=>e.remove())},
+ card(tag,icon,text){const c=el('div','card');const tg=el('div','tag');tg.innerHTML=ic(icon||'cpu');tg.appendChild(document.createTextNode(tag||'NOVA'));c.appendChild(tg);c.appendChild(el('div','txt',text||''));return c},
+ msg(role,text,o){o=o||{};this.clearChips();const r=el('div','row '+role);
+  if(role==='me')r.appendChild(el('div','b',text));
+  else{const c=this.card(o.tag,o.icon,text);if(o.render){const n=o.render();n&&c.appendChild(n)}r.appendChild(c);if(o.chips&&o.chips.length)c.appendChild(this.chipsEl(o.chips))}
+  log.appendChild(r);this.bottom();
+  if(o.save!==false&&!o.secret){hist.push({r:role,t:text,tag:o.tag,icon:o.icon});hist=hist.slice(-60);Store.set('hist',hist)}return r},
+ live(tag,icon){this.clearChips();const r=el('div','row bot');const c=this.card(tag,icon,'');c.classList.add('live');r.appendChild(c);log.appendChild(r);this.bottom();return c},
+ finish(c,out){c.classList.remove('live');c.querySelector('.txt').textContent=out.text;hist.push({r:'bot',t:out.text,tag:out.tag,icon:out.icon});hist=hist.slice(-60);Store.set('hist',hist);
+  if(out.chips&&out.chips.length)c.appendChild(this.chipsEl(out.chips));this.bottom()},
+ bottom(){requestAnimationFrame(()=>{log.scrollTop=log.scrollHeight})},
+ typing(on){let e=$('#typ');if(on&&!e){e=el('div','row bot');e.id='typ';const c=this.card('PROCESSING','cpu','');c.querySelector('.txt').innerHTML='<span class="eq"><i></i><i></i><i></i><i></i></span>';c.querySelector('.txt').style.display='block';e.appendChild(c);log.appendChild(e);this.bottom()}else if(!on&&e)e.remove();document.body.dataset.state=on?'think':'idle';this.status()},
+ status(){$('#st').textContent=LLM.loading?'LOADING MODEL '+Math.round(LLM.pct*100)+'%':busy?'PROCESSING…':LLM.engine?'AI CORE ACTIVE // ONLINE':'ASSISTANT SYSTEM // ONLINE'},
+ progress(p){LLM.pct=p;$('#pgline i').style.width=Math.round(p*100)+'%';this.status();this.tiles();if(p>=1)setTimeout(()=>{$('#pgline i').style.width='0'},900)},
+ tiles(){const set=(id,v,cls)=>{const e=$('#v-'+id);if(!e)return;e.textContent=v;e.className='v'+(cls?' '+cls:'')};
+  const b=Sys.batt;set('batt',b?Math.round(b.level*100)+'%'+(b.charging?' ⚡':''):'N/A',b&&b.charging?'ok':b&&b.level<.2?'bad':'');$('#b-batt').style.width=b?Math.round(b.level*100)+'%':'0';
+  const n=Sys.net();set('net',n.on?(n.type||'ONLINE'):'OFFLINE',n.on?'ok':'bad');
+  set('ai',!navigator.gpu?'NO WEBGPU':LLM.loading?'LOAD '+Math.round(LLM.pct*100)+'%':LLM.engine?'ACTIVE':'STANDBY',LLM.engine?'ok':'');$('#b-ai').style.width=LLM.engine?'100%':LLM.loading?Math.round(LLM.pct*100)+'%':'0';
+  set('todo',Store.get('todos',[]).length+' 件');
+  const nx=NOVA.timers.length?Math.max(0,Math.round((Math.min(...NOVA.timers.map(t=>t.end))-Date.now())/1000)):-1;
+  set('timer',nx<0?'—':p2(Math.floor(nx/60))+':'+p2(nx%60),nx>=0?'ok':'');
+  set('vault',!Vault.exists()?'未作成':Vault.key?'OPEN':'LOCKED',Vault.key?'ok':'')},
+ plugins(){const off=Store.get('off',[]);const box=$('#pls');box.innerHTML='';
+  NOVA.plugins.slice().sort((a,b)=>a.name.localeCompare(b.name,'ja')).forEach(p=>{const d=el('div','pl');
+   d.innerHTML='<div><b></b><small></small></div><label class="sw"><input type="checkbox"><span></span></label>';
+   d.querySelector('b').textContent=p.name;d.querySelector('small').textContent=p.desc||'';
+   const cb=d.querySelector('input');cb.checked=off.indexOf(p.id)<0;
+   cb.onchange=()=>{let o=Store.get('off',[]).filter(x=>x!==p.id);if(!cb.checked)o.push(p.id);Store.set('off',o)};box.appendChild(d)})},
+ sheet(id){this.closeSheets(true);$(id).classList.add('open');document.body.classList.add('sh');if(id==='#vsheet')this.vault();else this.plugins()},
+ closeSheets(keep){document.querySelectorAll('.sheet.open').forEach(s=>s.classList.remove('open'));if(!keep)document.body.classList.remove('sh');
+  if(!Vault.key&&Vault.w.length)Vault.w.splice(0).forEach(r=>r(false))},
+ vault(){renderVault()}
 };
-NOVA.say=t=>UI.add('bot',t);
+NOVA.say=t=>UI.msg('bot',t,{tag:'ALERT',icon:'timer',save:false});
 NOVA.onChange=()=>UI.plugins();
 
-let busy=false;
+/* ---- 金庫シート ---- */
+function renderVault(){
+ const V=$('#vbody');if(!V||!$('#vsheet').classList.contains('open'))return;V.innerHTML='';
+ const h=el('div','vh');h.innerHTML=ic('lock')+'<span>VAULT</span>';V.appendChild(h);
+ const mk=(type,ph)=>{const i=el('input','in');i.type=type;i.placeholder=ph;i.autocomplete=type==='password'?'new-password':'off';i.autocapitalize='off';i.spellcheck=false;return i};
+ const bt=(t,c)=>{const b=el('button','btn'+(c?' '+c:''),t);b.type='button';return b};
+ if(!Vault.exists()){
+  V.appendChild(el('p','note','ID・パスワードを端末内に暗号化して保存します（AES-256-GCM）。\nマスターパスワードを設定してください。※忘れると復元できません。'));
+  const a=mk('password','マスターパスワード（8文字以上）'),b=mk('password','もう一度入力'),er=el('div','err'),go=bt('金庫を作成','pri');
+  go.onclick=async()=>{if(a.value.length<8){er.textContent='8文字以上にしてください';return}if(a.value!==b.value){er.textContent='2つの入力が一致しません';return}go.disabled=true;try{await Vault.create(a.value)}catch(e){er.textContent='作成に失敗しました（HTTPS環境が必要です）';go.disabled=false}};
+  V.append(a,b,er,go);setTimeout(()=>a.focus(),350);return}
+ if(!Vault.key){
+  V.appendChild(el('p','note','マスターパスワードを入力して解除します。'));
+  const a=mk('password','マスターパスワード'),er=el('div','err'),go=bt('解除','pri');
+  a.autocomplete='current-password';
+  const run=async()=>{go.disabled=true;er.textContent='';try{await Vault.unlock(a.value)}catch(e){er.textContent='パスワードが違います';go.disabled=false;a.select()}};
+  go.onclick=run;a.onkeydown=e=>{if(e.key==='Enter')run()};
+  const imp=bt('バックアップを読込');imp.style.marginTop='10px';imp.onclick=importVault;
+  V.append(a,er,go,imp);setTimeout(()=>a.focus(),350);return}
+ // unlocked
+ const top=el('div','two'),ad=bt(Vault.adding?'閉じる':'＋ 追加','pri'),lk=bt('ロック');
+ ad.onclick=()=>{Vault.adding=!Vault.adding;Vault.pre='';renderVault()};lk.onclick=()=>Vault.lock();top.append(ad,lk);V.appendChild(top);
+ if(Vault.adding){
+  const s=mk('text','サービス名（例: Gmail）'),u=mk('text','ID / メールアドレス'),p=mk('text','パスワード'),n=mk('text','メモ（任意）'),er=el('div','err');
+  s.value=Vault.pre||'';u.inputMode='email';p.type='password';
+  const g=bt('パスワードを生成');g.style.marginBottom='8px';g.onclick=()=>{p.value=genPw(16);p.type='text'};
+  const sv=bt('保存','pri');
+  sv.onclick=async()=>{if(!s.value.trim()){er.textContent='サービス名を入力してください';return}if(!u.value&&!p.value){er.textContent='ID またはパスワードを入力してください';return}
+   await Vault.add({s:s.value.trim(),u:u.value.trim(),p:p.value,n:n.value.trim()});Vault.adding=false;Vault.pre='';renderVault()};
+  V.append(s,u,p,g,n,er,sv);setTimeout(()=>(s.value?u:s).focus(),350)}
+ const q=mk('search','検索');q.style.marginTop='12px';V.appendChild(q);
+ const list=el('div');V.appendChild(list);
+ const draw=()=>{list.innerHTML='';const w=q.value.trim().toLowerCase();let n=0;
+  Vault.data.forEach((e,i)=>{if(w&&!(e.s+' '+(e.u||'')).toLowerCase().includes(w))return;n++;list.appendChild(vcard(e,async()=>{await Vault.del(i);renderVault()}))});
+  if(!n)list.appendChild(el('p','note',Vault.data.length?'該当なし':'まだ登録がありません。「＋ 追加」から登録できます。'))};
+ q.oninput=draw;draw();
+ const ft=el('div','two');ft.style.marginTop='14px';const ex=bt('バックアップ書出'),im=bt('バックアップ読込');ex.onclick=exportVault;im.onclick=importVault;ft.append(ex,im);V.appendChild(ft);
+ V.appendChild(el('p','note','バックアップは暗号化されたまま保存されます。復号にはマスターパスワードが必要です。'));
+}
+function exportVault(){const v=Store.get('vault',null);if(!v)return;const a=el('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(v)],{type:'application/json'}));a.download='nova-vault-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+function importVault(){const f=el('input');f.type='file';f.accept='.json,application/json';
+ f.onchange=async()=>{try{const o=JSON.parse(await f.files[0].text());if(!o.salt||!o.iv||!o.ct)throw 0;
+  if(Vault.exists()&&!confirm('現在の金庫をバックアップの内容で上書きします。よろしいですか？'))return;
+  Store.set('vault',o);Vault.lock()}catch(e){alert('バックアップファイルを読み込めませんでした。')}};f.click()}
+
+/* ---- 送信 ---- */
 async function submit(text){
   text=(text||'').trim();if(!text||busy)return;busy=true;send.disabled=true;
-  UI.add('me',text);inp.value='';grow();
-  UI.typing(true);
-  let live=null;const onToken=t=>{if(!live){UI.typing(false);live=UI.live()}live.textContent=t;UI.bottom()};const t0=Date.now();const out=await NOVA.respond(text,onToken);
-  const wait=live?0:Math.max(0,Math.min(1100,350+out.text.length*8)-(Date.now()-t0));
-  await new Promise(r=>setTimeout(r,wait));
-  UI.typing(false);if(live)UI.finish(live,out);else UI.add('bot',out.text,out.chips);
-  busy=false;send.disabled=false;
+  const risky=/(パスワード|password|pass|pw)\s*(は|[:：=])/i.test(text);
+  UI.msg('me',risky?'（機密のため履歴に保存しません）'+text:text,{save:!risky});inp.value='';grow();
+  UI.typing(true);let live=null;
+  const onToken=t=>{if(!live){$('#typ')&&$('#typ').remove();live=UI.live('AI CORE','cpu')}live.querySelector('.txt').textContent=t;UI.bottom()};
+  const t0=Date.now();const out=await NOVA.respond(text,onToken);
+  if(!live)await new Promise(r=>setTimeout(r,Math.max(0,Math.min(900,300+out.text.length*6)-(Date.now()-t0))));
+  UI.typing(false);
+  if(live)UI.finish(live,Object.assign({},out,{tag:'AI CORE',icon:'cpu'}));else UI.msg('bot',out.text,out);
+  busy=false;send.disabled=false;UI.tiles();
   if(!matchMedia('(pointer:coarse)').matches)inp.focus();
 }
+const grow=()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,120)+'px'};
 $('#f').addEventListener('submit',e=>{e.preventDefault();submit(inp.value)});
 inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!matchMedia('(pointer:coarse)').matches){e.preventDefault();submit(inp.value)}});
-const grow=()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,130)+'px'};
 inp.addEventListener('input',grow);
 
-/* シート */
-const open=v=>document.body.classList.toggle('open',v);
-$('#menu').onclick=()=>{UI.plugins();open(true)};$('#scrim').onclick=()=>open(false);
-$('#clear').onclick=()=>{hist=[];Store.set('hist',[]);log.innerHTML='';open(false);welcome()};
-$('#theme').onclick=()=>{const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=dark?'light':'dark';Store.set('theme',r.dataset.theme)};
-const th=Store.get('theme',null);if(th)document.documentElement.dataset.theme=th;
-
-/* WebLLM 起動 */
-const bar=$('#aibar'),boot=$('#boot'),sel=$('#model');
-LLM.models.forEach(([id,l])=>{const o=document.createElement('option');o.value=id;o.textContent=l;sel.appendChild(o)});sel.value=LLM.id;
-if(!navigator.gpu){$('#pgt').textContent='WebGPU非対応ブラウザです（ルールベース機能のみ動作）';boot.disabled=true}
+/* ---- AI 起動 ---- */
 async function startAI(){
-  if(LLM.engine||LLM.loading)return;boot.disabled=true;bar.classList.add('load');$('#pgt').textContent='モデル読み込み中… 0%';
-  try{await LLM.load();NOVA.llmReady=true;bar.classList.remove('load');bar.classList.add('ready');$('#pgi').style.width='0';$('#pgt').textContent='🧠 AI稼働中：'+LLM.label();$('#st').textContent='WebLLM稼働中・端末内で動作';
-    UI.add('bot','🧠 AIを起動しました。何でも話しかけてください！\n（計算・タイマーなどの機能もそのまま使えます）')}
-  catch(e){bar.classList.remove('load');boot.disabled=!navigator.gpu;$('#pgt').textContent='起動に失敗しました';UI.add('bot','AIの起動に失敗しました：'+(e&&e.message||e),['AIを起動'])}
+ if(LLM.engine||LLM.loading)return;
+ try{await LLM.load();NOVA.llmReady=true;UI.msg('bot','AIコアが起動しました。自由に指示してください。\n計算・タイマー・TODO・金庫などの機能は、これまでどおり即座に実行します。',{tag:'AI CORE',icon:'cpu',save:false})}
+ catch(e){UI.msg('bot','AIコアの起動に失敗しました：'+(e&&e.message||e),{tag:'ERROR',icon:'cpu',chips:['AIを起動'],save:false})}
+ finally{UI.status();UI.tiles()}
 }
-boot.onclick=startAI;
-sel.onchange=async()=>{LLM.id=sel.value;Store.set('model',LLM.id);if(LLM.engine){try{await LLM.engine.unload()}catch(e){}LLM.engine=null;LLM.history=[];NOVA.llmReady=false;bar.classList.remove('ready');open(false);startAI()}};
+
+/* ---- 初期化 ---- */
+$('#menu').innerHTML=ic('sliders');send.innerHTML=ic('send');
+$('#sh-h').innerHTML=ic('sliders')+'<span>SYSTEM</span>';
+$('#menu').onclick=()=>UI.sheet('#sheet');$('#scrim').onclick=()=>UI.closeSheets();
+$('#vopen').onclick=()=>UI.sheet('#vsheet');
+$('#boot').onclick=()=>{UI.closeSheets();startAI()};
+$('#clear').onclick=()=>{hist=[];Store.set('hist',[]);log.innerHTML='';UI.closeSheets();showBrief()};
+const sel=$('#model');LLM.models.forEach(([id,l])=>{const o=el('option',null,l);o.value=id;sel.appendChild(o)});sel.value=LLM.id;
+sel.onchange=async()=>{LLM.id=sel.value;Store.set('model',LLM.id);if(LLM.engine){try{await LLM.engine.unload()}catch(e){}LLM.engine=null;LLM.history=[];NOVA.llmReady=false;UI.tiles();UI.closeSheets();startAI()}};
+// accent
+const ACC={cyan:'#4de1ff',violet:'#a78bff',amber:'#ffc14d',green:'#4dffb0',pink:'#ff6bb5'};
+function setAccent(n){document.documentElement.dataset.accent=n;Store.set('accent',n);document.querySelectorAll('#sws button').forEach(b=>b.classList.toggle('on',b.dataset.n===n));window.dispatchEvent(new Event('accent'))}
+Object.keys(ACC).forEach(n=>{const b=el('button');b.type='button';b.dataset.n=n;b.style.setProperty('--c',ACC[n]);b.setAttribute('aria-label',n);b.onclick=()=>setAccent(n);$('#sws').appendChild(b)});
+setAccent(Store.get('accent','cyan'));
+// dock
+[['ブリーフィング','sun','send','ブリーフィング'],['タイマー','timer','fill','分タイマー'],['TODO','todo','send','todo一覧'],['金庫','lock','vault'],['PW生成','key','send','パスワード生成'],['サイコロ','dice','send','サイコロ'],['AI','cpu','send','AIを起動']].forEach(([l,i,m,v])=>{
+ const b=el('button','q');b.type='button';b.innerHTML=ic(i);b.appendChild(document.createTextNode(l));
+ b.onclick=()=>{if(m==='send')submit(v);else if(m==='vault')UI.sheet('#vsheet');else{inp.value=v;inp.focus();setTimeout(()=>inp.setSelectionRange(0,0),30);grow()}};$('#dock').appendChild(b)});
+// tiles
+document.querySelectorAll('.tile').forEach(t=>t.onclick=()=>{const g=t.dataset.go;if(g==='ai')submit('AIを起動');else if(g==='todo')submit('todo一覧');else if(g==='timer')submit('タイマー一覧');else if(g==='vault')UI.sheet('#vsheet')});
+const hud=$('#hud');hud.classList.toggle('min',!!Store.get('hudmin',false));
+$('#clk').onclick=()=>{hud.classList.toggle('min');Store.set('hudmin',hud.classList.contains('min'))};
+// clock
+function tick(){const d=new Date();$('#time').innerHTML=p2(d.getHours())+'<span class="c">:</span>'+p2(d.getMinutes())+'<small>'+p2(d.getSeconds())+'</small>';$('#date').textContent=dstr(d).replace(' ','\n');$('#date').style.whiteSpace='pre-line';
+ const nx=NOVA.timers.length;if(nx||tick.n!==0){UI.tiles();tick.n=nx?1:0}}
+tick();setInterval(tick,1000);
+addEventListener('online',()=>UI.tiles());addEventListener('offline',()=>UI.tiles());
+document.addEventListener('visibilitychange',()=>{clearTimeout(tick.hv);if(document.hidden&&Vault.key)tick.hv=setTimeout(()=>Vault.lock(),30000)});
+// keyboard (iOS)
+if(window.visualViewport){const f=()=>{const d=innerHeight-visualViewport.height;if(d>120){document.documentElement.style.setProperty('--vh',visualViewport.height+'px');scrollTo(0,0)}else document.documentElement.style.removeProperty('--vh');UI.bottom()};visualViewport.addEventListener('resize',f)}
+// history + brief
+function showBrief(){const g=Store.get('name','');UI.msg('bot',`システム起動。${g?g+'さん、':''}現在の状況です。`,{tag:'BRIEFING',icon:'sun',render:briefNode,chips:['todo一覧','5分タイマー','金庫を開く','できること'],save:false})}
+hist.slice(-16).forEach(m=>{if(m.r==='me')UI.msg('me',m.t,{save:false});else UI.msg('bot',m.t,{tag:m.tag,icon:m.icon,save:false})});
+showBrief();UI.tiles();UI.status();Sys.init();
 if(navigator.gpu&&Store.get('autoload',false))startAI();
 
-/* キーボード表示時の高さ追従（スマホ） */
-if(window.visualViewport){const f=()=>{document.documentElement.style.setProperty('--vh',visualViewport.height+'px');window.scrollTo(0,0);UI.bottom()};visualViewport.addEventListener('resize',f);f()}
-
-function welcome(){const n=Store.get('name','');UI.add('bot',`こんにちは${n?'、'+n+'さん':''}！NOVAです。\n外部サーバーを使わず、この端末の中だけで動くAIです。`,['できること','今何時？','3分タイマー','12*(3+4)','サイコロ'],false)}
-if(hist.length){hist.forEach(m=>UI.add(m.r,m.t,null,false))}else welcome();
+/* ---- 背景パーティクル ---- */
+(()=>{const c=$('#bg'),x=c.getContext('2d');let W,H,P=[],C='#4de1ff',raf=0;const rm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+ const col=()=>{C=getComputedStyle(document.documentElement).getPropertyValue('--a').trim()||'#4de1ff'};
+ function rs(){const D=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*D;c.height=H*D;x.setTransform(D,0,0,D,0,0);col();
+  P=Array.from({length:Math.round(Math.min(60,W*H/15000))},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.28,vy:(Math.random()-.5)*.28,r:Math.random()*1.3+.4}))}
+ function fr(){x.clearRect(0,0,W,H);x.fillStyle=C;x.strokeStyle=C;
+  for(const p of P){p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1}
+  for(let i=0;i<P.length;i++){const a=P[i];x.globalAlpha=.65;x.beginPath();x.arc(a.x,a.y,a.r,0,6.283);x.fill();
+   for(let j=i+1;j<P.length;j++){const b=P[j],d=Math.hypot(a.x-b.x,a.y-b.y);if(d<115){x.globalAlpha=(1-d/115)*.26;x.beginPath();x.moveTo(a.x,a.y);x.lineTo(b.x,b.y);x.stroke()}}}
+  x.globalAlpha=1}
+ const loop=()=>{fr();raf=requestAnimationFrame(loop)};
+ rs();addEventListener('resize',rs);window.addEventListener('accent',col);
+ if(rm)fr();else loop();
+ document.addEventListener('visibilitychange',()=>{if(rm)return;cancelAnimationFrame(raf);if(!document.hidden)loop()})})();
 })();
 </script>
 </body>
