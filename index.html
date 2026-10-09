@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1020">
+<title>NOVA — ブラウザAI</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef1fa;--panel:#ffffff;--ink:#141a2e;--sub:#6b7391;--line:#e0e5f3;--bot:#ffffff;--chip:#ecebfd;--chipink:#4b3fd1;--a1:#6c5ce7;--a2:#00b8d9;--shadow:0 6px 24px rgba(40,50,110,.10)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1020;--panel:#141a30;--ink:#eaeefc;--sub:#8c95b8;--line:#232b4a;--bot:#1a2140;--chip:#222a52;--chipink:#b9b2ff;--shadow:0 6px 24px rgba(0,0,0,.35)}}
+:root[data-theme="dark"]{--bg:#0b1020;--panel:#141a30;--ink:#eaeefc;--sub:#8c95b8;--line:#232b4a;--bot:#1a2140;--chip:#222a52;--chipink:#b9b2ff;--shadow:0 6px 24px rgba(0,0,0,.35)}
+*,*::before,*::after{box-sizing:inherit;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;font-size:16px;line-height:1.55;overscroll-behavior:none}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(60% 40% at 15% 0%,rgba(108,92,231,.18),transparent 70%),radial-gradient(50% 35% at 100% 100%,rgba(0,184,217,.14),transparent 70%)}
+#app{position:relative;display:flex;flex-direction:column;height:var(--vh,100%);max-width:760px;margin:0 auto}
+header{display:flex;align-items:center;gap:12px;padding:10px 14px;background:color-mix(in srgb,var(--panel) 80%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.orb{width:38px;height:38px;border-radius:50%;flex:none;background:conic-gradient(from 0deg,#6c5ce7,#00b8d9,#ff7ac6,#6c5ce7);filter:saturate(1.2);animation:spin 6s linear infinite;position:relative}
+.orb::after{content:"";position:absolute;inset:3px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.85),rgba(255,255,255,.1) 60%,transparent)}
+.thinking .orb{animation-duration:1.2s}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ttl{flex:1;min-width:0}.ttl b{display:block;font-size:17px;letter-spacing:.08em}.ttl small{color:var(--sub);font-size:12px}
+.ib{width:44px;height:44px;border:0;border-radius:14px;background:transparent;color:var(--ink);font-size:20px;cursor:pointer;display:grid;place-items:center}
+.ib:active{background:var(--chip)}
+#log{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:16px 14px 8px;scroll-behavior:smooth}
+.row{display:flex;flex-direction:column;margin:0 0 12px;animation:in .28s ease both}
+.row.me{align-items:flex-end}.row.bot{align-items:flex-start}
+@keyframes in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+.b{max-width:86%;padding:10px 14px;border-radius:20px;white-space:pre-wrap;word-break:break-word;box-shadow:var(--shadow)}
+.bot .b{background:var(--bot);border:1px solid var(--line);border-bottom-left-radius:6px}
+.me .b{background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;border-bottom-right-radius:6px}
+.tag{font-size:11px;color:var(--sub);margin:3px 6px 0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;max-width:92%}
+.chip{border:0;background:var(--chip);color:var(--chipink);padding:9px 14px;min-height:40px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer;transition:transform .15s}
+.chip:active{transform:scale(.94)}
+.dots{display:inline-flex;gap:5px;padding:4px 2px}.dots i{width:7px;height:7px;border-radius:50%;background:var(--sub);animation:bl 1s infinite}.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-4px)}}
+form{display:flex;gap:8px;align-items:flex-end;padding:10px 12px 12px;background:color-mix(in srgb,var(--panel) 80%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line)}
+textarea{flex:1;resize:none;max-height:130px;min-height:46px;border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:23px;padding:11px 16px;font:inherit;font-size:16px;line-height:1.4;outline:none;transition:border-color .2s,box-shadow .2s}
+textarea:focus{border-color:var(--a1);box-shadow:0 0 0 3px color-mix(in srgb,var(--a1) 22%,transparent)}
+#send{width:46px;height:46px;border:0;border-radius:50%;flex:none;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font-size:20px;cursor:pointer;transition:transform .15s,opacity .2s}
+#send:active{transform:scale(.9)}#send:disabled{opacity:.45}
+#scrim{position:fixed;inset:0;background:rgba(5,8,20,.5);opacity:0;pointer-events:none;transition:opacity .25s;z-index:5}
+#sheet{position:fixed;left:0;right:0;bottom:0;max-width:760px;margin:0 auto;background:var(--panel);border-radius:26px 26px 0 0;padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));max-height:80%;overflow-y:auto;transform:translateY(105%);transition:transform .38s cubic-bezier(.2,.8,.2,1);z-index:6;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+body.open #scrim{opacity:1;pointer-events:auto}body.open #sheet{transform:none}
+.grip{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
+#sheet h3{margin:14px 0 6px;font-size:13px;color:var(--sub);letter-spacing:.06em}
+.pl{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.pl div{flex:1;min-width:0}.pl b{display:block;font-size:15px}.pl small{color:var(--sub);font-size:12.5px}
+.sw{position:relative;width:50px;height:30px;flex:none}.sw input{opacity:0;position:absolute;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.sw span{position:absolute;inset:0;border-radius:15px;background:var(--line);transition:background .25s}.sw span::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,.25);transition:transform .25s}
+.sw input:checked+span{background:var(--a1)}.sw input:checked+span::after{transform:translateX(20px)}
+.btns{display:flex;gap:10px;margin-top:8px}.btns button{flex:1;min-height:46px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:14px;font:inherit;font-size:15px;cursor:pointer}
+#aibar{position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--panel) 55%,transparent);font-size:12.5px;color:var(--sub)}
+#boot{flex:none;border:0;min-height:38px;padding:0 14px;border-radius:999px;background:linear-gradient(135deg,var(--a1),var(--a2));color:#fff;font:inherit;font-size:14px;cursor:pointer}
+#boot:disabled{opacity:.5}#aibar.ready #boot{display:none}#pgt{flex:1;min-width:0}
+.pg{position:absolute;left:0;right:0;bottom:0;height:3px}#pgi{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--a1),var(--a2));transition:width .3s}
+select{width:100%;min-height:46px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:14px;padding:0 12px;font:inherit;font-size:16px}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="hd">
+    <div class="orb"></div>
+    <div class="ttl"><b>NOVA</b><small id="st">オフラインAI・端末内で動作</small></div>
+    <button class="ib" id="menu" aria-label="設定">⚙︎</button>
+  </header>
+  <div id="aibar"><button id="boot" type="button">🧠 AIを起動</button><span id="pgt">初回のみモデルをDL（以後はキャッシュ）</span><div class="pg"><i id="pgi"></i></div></div>
+  <main id="log" aria-live="polite"></main>
+  <form id="f" autocomplete="off">
+    <textarea id="in" rows="1" placeholder="メッセージを入力…" enterkeyhint="send"></textarea>
+    <button id="send" type="submit" aria-label="送信">➤</button>
+  </form>
+</div>
+<div id="scrim"></div>
+<div id="sheet" role="dialog" aria-label="設定">
+  <div class="grip"></div>
+  <h3>AIモデル（WebLLM）</h3>
+  <select id="model"></select>
+  <h3>機能プラグイン（ON/OFF）</h3>
+  <div id="pls"></div>
+  <h3>表示</h3>
+  <div class="btns"><button id="theme">テーマ切替</button><button id="clear">履歴を消去</button></div>
+</div>
+
+<script>
+/* =====================================================================
+   NOVA — 外部APIなし・端末内完結のブラウザAI
+   ---------------------------------------------------------------------
+   【拡張の仕方】 機能は「プラグイン」として NOVA.register() で追加します。
+     NOVA.register({
+       id:'my-plugin', name:'表示名', desc:'説明', priority:50,
+       match(ctx){ return 0〜1 }          // 自分が答えるべき度合い（最大のものが採用）
+       run(ctx){ return '文字列' or {text, chips:['候補1','候補2']} } // async可
+     });
+   ctx = { raw, text(正規化済), ai(NOVA), store(保存), kb }
+   フック: NOVA.use('before', ctx=>{}) / NOVA.use('after', ctx=>{})
+   将来: run() 内で WebLLM / Transformers.js / 自作モデルを呼べば
+         そのままAI機能として差し替え・追加できます。
+   ===================================================================== */
+(()=>{
+const $=s=>document.querySelector(s);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+
+/* ---- 永続化（失敗してもメモリで動く） ---- */
+const Store={m:{},get(k,d){try{const v=localStorage.getItem('nova:'+k);if(v!==null)return JSON.parse(v)}catch(e){}return k in this.m?this.m[k]:d},
+  set(k,v){this.m[k]=v;try{localStorage.setItem('nova:'+k,JSON.stringify(v))}catch(e){}}};
+
+/* ---- 類似度（文字バイグラム Dice 係数） ---- */
+const bi=s=>{s=s.replace(/\s+/g,'');const r=new Set();for(let i=0;i<s.length-1;i++)r.add(s.slice(i,i+2));if(s.length===1)r.add(s);return r};
+const dice=(a,b)=>{if(!a.size||!b.size)return 0;let n=0;a.forEach(x=>b.has(x)&&n++);return 2*n/(a.size+b.size)};
+
+/* ---- コア ---- */
+const NOVA={
+  plugins:[],hooks:{before:[],after:[]},store:Store,say:null,
+  register(p){p.priority=p.priority??50;this.plugins=this.plugins.filter(x=>x.id!==p.id).concat(p).sort((a,b)=>b.priority-a.priority);this.onChange&&this.onChange();return this},
+  use(stage,fn){this.hooks[stage].push(fn);return this},
+  enabled(id){return Store.get('off',[]).indexOf(id)<0},
+  norm(s){return s.normalize('NFKC').replace(/[×]/g,'*').replace(/[÷]/g,'/').trim()},
+  fallback(){return{text:pick(['うーん、まだその話題は勉強中です。','ごめんなさい、うまく理解できませんでした。','それはまだ苦手かもしれません…'])+'\n下のような事ならお任せください。',chips:(this.llmReady?[]:['AIを起動']).concat(['できること','サイコロ','3分タイマー','今何時？'])}},
+  async respond(raw,onToken){
+    const ctx={raw,text:this.norm(raw),ai:this,store:Store,kb:null,onToken};
+    for(const h of this.hooks.before)await h(ctx);
+    let best=null,bs=0;
+    for(const p of this.plugins){if(!this.enabled(p.id))continue;let s=0;try{s=+p.match(ctx)||0}catch(e){}if(s>bs){bs=s;best=p}}
+    let out;
+    if(best&&bs>0.3){try{out=await best.run(ctx)}catch(e){out='処理中にエラーが起きました。'}ctx.plugin=best.id}else out=this.fallback(ctx);
+    ctx.out=typeof out==='string'?{text:out}:out;
+    for(const h of this.hooks.after)await h(ctx);
+    return ctx.out;
+  }
+};
+window.NOVA=NOVA;
+
+/* ===================== 標準プラグイン ===================== */
+const KB=[
+ {k:['あなたは誰','自己紹介','君は誰','名前は何','何者'],a:'私はNOVA。あなたの端末の中だけで動くAIです。外部サーバーには一切通信しません。'},
+ {k:['できること','何ができる','機能','使い方','ヘルプ','help'],a:'できること：\n・雑談／あいさつ\n・計算（例: 12*(3+4)）\n・時刻・日付\n・タイマー（例: 3分タイマー）\n・TODO管理（例: todo 牛乳を買う）\n・サイコロ／コイン／おみくじ\n・名前を覚える\n・知識Q&A\n⚙︎から機能のON/OFFもできます。'},
+ {k:['プライバシー','送信','外部','オフライン','安全','通信'],a:'会話はこの端末のブラウザ内だけで処理・保存されます。外部APIやサーバーへの送信はありません。履歴は⚙︎から消去できます。'},
+ {k:['拡張','機能追加','プラグイン','カスタマイズ','改造'],a:'NOVA.register({ id, name, match(ctx), run(ctx) }) で機能を追加できます。match が返すスコアが一番高いプラグインが応答します。run の中で WebLLM などのAIモデルを呼べば、そのままAI機能になります。'},
+ {k:['ありがとう','感謝','助かった'],a:pick=>'どういたしまして！'},
+ {k:['疲れた','しんどい','つらい'],a:'お疲れさまです。少し休憩しませんか？ 5分タイマーもセットできますよ。'},
+ {k:['つまらない','暇','ひま'],a:'それならサイコロやおみくじで遊びませんか？'},
+ {k:['天気','ニュース','株価'],a:'外部通信をしないので、天気やニュースは取得できません。将来プラグインで拡張できます。'},
+ {k:['面白い話','ジョーク','笑わせて','冗談'],a:'「布団が吹っ飛んだ」…すみません、寒かったですね。'},
+ {k:['AIとは','人工知能'],a:'AI（人工知能）は、学習や推論など人の知的な作業をコンピュータで行う技術の総称です。私はルールと類似度検索で動く軽量なAIです。'}
+];
+NOVA.register({id:'greet',name:'あいさつ',desc:'こんにちは等に反応',priority:60,
+ match:c=>/^(こんにちは|こんばんは|おはよう|やあ|はじめまして|hello|hi|hey|ども)/i.test(c.text)?.85:0,
+ run(c){const n=Store.get('name',''),h=new Date().getHours();const g=h<5?'こんばんは':h<11?'おはようございます':h<18?'こんにちは':'こんばんは';
+  return{text:`${g}${n?'、'+n+'さん':''}！何をお手伝いしましょう？`,chips:['できること','今何時？','サイコロ']}}});
+
+NOVA.register({id:'calc',name:'計算',desc:'四則演算・累乗・剰余',priority:90,
+ match(c){return ext(c.text)?.95:0},
+ run(c){const e=ext(c.text);let v;try{v=Function('"use strict";return ('+e.replace(/\^/g,'**')+')')()}catch(x){return'式がうまく読めませんでした。'}
+  if(typeof v!=='number'||!isFinite(v))return'計算できませんでした。';return`${e} = ${+v.toPrecision(12)}`}});
+function ext(t){const s=t.replace(/,/g,'');if(/\d{4}-\d{1,2}-\d{1,2}/.test(s))return null;const m=s.match(/[\d.(][\d.()\s+\-*\/%^]*[\d)]/);if(!m)return null;const e=m[0].trim();return/[+\-*\/%^]/.test(e.replace(/^\s*-/,''))&&/\d/.test(e)?e:null}
+
+NOVA.register({id:'time',name:'日時',desc:'現在の時刻・日付・曜日',priority:70,
+ match:c=>/(今何時|何時|時刻|日付|今日は|何曜日|何日|今の時間)/.test(c.text)&&!/タイマー|後/.test(c.text)?.85:0,
+ run(c){const d=new Date();return`${d.toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric',weekday:'long'})}\n${d.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'})} です。`}});
+
+const dur=t=>{let s=0;t.replace(/(\d+(?:\.\d+)?)\s*(時間|分|秒)/g,(_,n,u)=>{s+=n*{'時間':3600,'分':60,'秒':1}[u]});return Math.round(s)};
+NOVA.register({id:'timer',name:'タイマー',desc:'「3分タイマー」など（画面を開いている間）',priority:85,
+ match:c=>dur(c.text)>0&&/タイマー|後に|後で|知らせ|教えて/.test(c.text)?.95:0,
+ run(c){const s=dur(c.text);if(s>86400)return'タイマーは24時間までです。';
+  setTimeout(()=>{c.ai.say&&c.ai.say('⏰ '+fmt(s)+'経ちました！');navigator.vibrate&&navigator.vibrate([200,100,200])},s*1000);
+  return`⏱ ${fmt(s)}のタイマーをセットしました。\n（このページを開いている間のみ動作します）`}});
+const fmt=s=>[[3600,'時間'],[60,'分'],[1,'秒']].reduce((r,[n,u])=>{const v=Math.floor(s/n);s%=n;return v?r+v+u:r},'');
+
+NOVA.register({id:'todo',name:'TODO',desc:'todo 〇〇 / 一覧 / 完了 1',priority:80,
+ match(c){const t=c.text;return/^(todo|タスク|やること)\s*[:：]?\s*\S/i.test(t)||/(todo|タスク|やること).*(一覧|リスト|見せ)/i.test(t)||/^(完了|削除)\s*\d+/.test(t)?.95:0},
+ run(c){const t=c.text;let L=Store.get('todos',[]),m;
+  if(m=t.match(/^(完了|削除)\s*(\d+)/)){const i=+m[2]-1;if(!L[i])return'その番号は見つかりません。';const x=L.splice(i,1)[0];Store.set('todos',L);return`「${x}」を${m[1]}しました。`+show(L)}
+  if(/(一覧|リスト|見せ)/.test(t)&&!/^(todo|タスク|やること)\s*[:：]\s*\S/i.test(t))return show(L);
+  m=t.match(/^(?:todo|タスク|やること)\s*[:：]?\s*(.+)/i);L.push(m[1]);Store.set('todos',L);return`追加しました：${m[1]}`+show(L)}});
+const show=L=>L.length?'\n\n📝 TODO\n'+L.map((x,i)=>`${i+1}. ${x}`).join('\n')+'\n（「完了 1」で削除）':'\n\nTODOは空です。';
+
+NOVA.register({id:'memo',name:'名前の記憶',desc:'「私の名前は〇〇」を覚える',priority:75,
+ match:c=>/(私|僕|俺|わたし|ぼく|おれ)の名前は.+/.test(c.text)||/(私|僕|俺).*(名前).*(覚え|わかる|知って|誰)/.test(c.text)?.9:0,
+ run(c){const m=c.text.match(/の名前は(.+?)(?:です|だよ|やで|っす|$)/);
+  if(m){Store.set('name',m[1].trim());return`${m[1].trim()}さんですね。覚えました！`}
+  const n=Store.get('name','');return n?`${n}さんですよね。覚えています。`:'まだ聞いていません。「私の名前は〇〇」と教えてください。'}});
+
+NOVA.register({id:'fun',name:'ゲーム',desc:'サイコロ・コイン・おみくじ',priority:65,
+ match:c=>/(サイコロ|ダイス|コイン|コイントス|おみくじ|運勢)/.test(c.text)?.9:0,
+ run(c){const t=c.text,ch=['もう一回','できること'];
+  if(/コイン/.test(t))return{text:'🪙 '+pick(['表','裏'])+' が出ました。',chips:['コイン','サイコロ']};
+  if(/おみくじ|運勢/.test(t))return{text:'🎴 '+pick(['大吉','中吉','小吉','吉','末吉','凶'])+'！',chips:['おみくじ','サイコロ']};
+  const n=+(t.match(/(\d+)\s*面/)||[0,6])[1]||6;return{text:`🎲 ${n}面ダイス：${1+Math.floor(Math.random()*n)}`,chips:['サイコロ','コイン']}}});
+
+NOVA.register({id:'knowledge',name:'知識Q&A',desc:'内蔵の知識ベースを類似度検索',priority:30,
+ match(c){let best=0,hit=null;const tb=bi(c.text.toLowerCase());
+  for(const e of KB)for(const k of e.k){const s=c.text.toLowerCase().includes(k.toLowerCase())?.9:dice(tb,bi(k.toLowerCase()));if(s>best){best=s;hit=e}}
+  c.kb=hit;return best>=(LLM.engine?.85:.4)?best:0},
+ run(c){const a=c.kb.a;return typeof a==='function'?pick(['どういたしまして！','お役に立てて嬉しいです。']):a}});
+
+/* ===================== WebLLM（端末内で動く言語モデル） ===================== */
+const WEBLLM_URLS=['https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.79/+esm','https://esm.run/@mlc-ai/web-llm'];
+const LLM={engine:null,loading:false,history:[],id:Store.get('model','Qwen2.5-1.5B-Instruct-q4f16_1-MLC'),
+ models:[['Qwen2.5-0.5B-Instruct-q4f16_1-MLC','超軽量 Qwen2.5 0.5B（スマホ向け）'],['Qwen2.5-1.5B-Instruct-q4f16_1-MLC','標準 Qwen2.5 1.5B（日本語◎）'],['Llama-3.2-1B-Instruct-q4f16_1-MLC','Llama 3.2 1B'],['gemma-2-2b-it-q4f16_1-MLC','高品質 Gemma2 2B（重め）']],
+ label(){const m=this.models.find(x=>x[0]===this.id);return m?m[1]:this.id},
+ async load(){
+  if(this.engine||this.loading)return;
+  if(!navigator.gpu)throw new Error('このブラウザはWebGPU非対応です（最新のChrome/Edge/Safariで開いてください）');
+  this.loading=true;
+  try{
+   let wl;for(const u of WEBLLM_URLS){try{wl=await import(u);break}catch(e){}}
+   if(!wl)throw new Error('WebLLMライブラリを読み込めませんでした（通信を確認してください）');
+   if(!wl.prebuiltAppConfig.model_list.some(m=>m.model_id===this.id))throw new Error('モデルが見つかりません: '+this.id);
+   this.engine=await wl.CreateMLCEngine(this.id,{initProgressCallback:r=>UI.progress(r.progress||0)});
+   Store.set('autoload',true);
+  }finally{this.loading=false}
+ },
+ async chat(text,onToken){
+  const n=Store.get('name','');
+  const sys={role:'system',content:'あなたは「NOVA」という親切なAIアシスタントです。ユーザーと同じ言語で、短く分かりやすく答えてください。'+(n?'ユーザーの名前は'+n+'です。':'')};
+  this.history.push({role:'user',content:text});this.history=this.history.slice(-12);
+  while(this.history.length&&this.history[0].role!=='user')this.history.shift();
+  const st=await this.engine.chat.completions.create({messages:[sys,...this.history],stream:true,temperature:.7,max_tokens:600});
+  let t='';for await(const ch of st){t+=(ch.choices[0]&&ch.choices[0].delta&&ch.choices[0].delta.content)||'';onToken&&onToken(t)}
+  this.history.push({role:'assistant',content:t});return t||'（応答が空でした）';
+ }};
+NOVA.register({id:'llm',name:'AI会話（WebLLM）',desc:'端末内の言語モデル。他の機能に当てはまらない会話を担当',priority:20,
+ match:c=>LLM.engine?.65:0,
+ async run(c){return{text:await LLM.chat(c.raw,c.onToken)}}});
+NOVA.register({id:'boot',name:'AI起動',desc:'「AIを起動」でWebLLMを起動',priority:95,
+ match:c=>/AI.*(起動|開始|ロード|読み込)/i.test(c.text)?.95:0,
+ run(){if(LLM.engine)return'AIはすでに起動しています。';startAI();return'🧠 AIを起動します。上のバーで進捗を確認してください。\n初回のみモデルをダウンロードします（以後はキャッシュ）。'}});
+
+/* ===================== UI ===================== */
+const log=$('#log'),inp=$('#in'),send=$('#send');
+let hist=Store.get('hist',[]);
+const UI={
+  add(role,text,chips,save=true){
+    log.querySelectorAll('.chips').forEach(e=>e.remove());
+    const r=document.createElement('div');r.className='row '+role;
+    const b=document.createElement('div');b.className='b';b.textContent=text;r.appendChild(b);
+    if(chips&&chips.length){const w=document.createElement('div');w.className='chips';chips.forEach(t=>{const x=document.createElement('button');x.type='button';x.className='chip';x.textContent=t;x.onclick=()=>submit(t);w.appendChild(x)});r.appendChild(w)}
+    log.appendChild(r);this.bottom();
+    if(save){hist.push({r:role,t:text});hist=hist.slice(-60);Store.set('hist',hist)}
+  },
+  bottom(){requestAnimationFrame(()=>{log.scrollTop=log.scrollHeight})},
+  live(){log.querySelectorAll('.chips').forEach(e=>e.remove());const r=document.createElement('div');r.className='row bot';const b=document.createElement('div');b.className='b';r.appendChild(b);log.appendChild(r);return b},
+  finish(b,out){b.textContent=out.text;hist.push({r:'bot',t:out.text});hist=hist.slice(-60);Store.set('hist',hist);
+    if(out.chips&&out.chips.length){const w=document.createElement('div');w.className='chips';out.chips.forEach(t=>{const x=document.createElement('button');x.type='button';x.className='chip';x.textContent=t;x.onclick=()=>submit(t);w.appendChild(x)});b.parentNode.appendChild(w)}this.bottom()},
+  progress(p){$('#pgi').style.width=Math.round(p*100)+'%';$('#pgt').textContent='モデル読み込み中… '+Math.round(p*100)+'%'},
+  typing(on){let e=$('#typ');if(on&&!e){e=document.createElement('div');e.id='typ';e.className='row bot';e.innerHTML='<div class="b"><span class="dots"><i></i><i></i><i></i></span></div>';log.appendChild(e);this.bottom()}else if(!on&&e)e.remove();$('#hd').classList.toggle('thinking',on);$('#st').textContent=on?'考え中…':'オフラインAI・端末内で動作'},
+  plugins(){const off=Store.get('off',[]);const box=$('#pls');box.innerHTML='';
+    NOVA.plugins.slice().sort((a,b)=>a.name.localeCompare(b.name,'ja')).forEach(p=>{const d=document.createElement('div');d.className='pl';
+      d.innerHTML=`<div><b></b><small></small></div><label class="sw"><input type="checkbox"><span></span></label>`;
+      d.querySelector('b').textContent=p.name;d.querySelector('small').textContent=p.desc||'';
+      const cb=d.querySelector('input');cb.checked=off.indexOf(p.id)<0;
+      cb.onchange=()=>{let o=Store.get('off',[]).filter(x=>x!==p.id);if(!cb.checked)o.push(p.id);Store.set('off',o)};box.appendChild(d)})}
+};
+NOVA.say=t=>UI.add('bot',t);
+NOVA.onChange=()=>UI.plugins();
+
+let busy=false;
+async function submit(text){
+  text=(text||'').trim();if(!text||busy)return;busy=true;send.disabled=true;
+  UI.add('me',text);inp.value='';grow();
+  UI.typing(true);
+  let live=null;const onToken=t=>{if(!live){UI.typing(false);live=UI.live()}live.textContent=t;UI.bottom()};const t0=Date.now();const out=await NOVA.respond(text,onToken);
+  const wait=live?0:Math.max(0,Math.min(1100,350+out.text.length*8)-(Date.now()-t0));
+  await new Promise(r=>setTimeout(r,wait));
+  UI.typing(false);if(live)UI.finish(live,out);else UI.add('bot',out.text,out.chips);
+  busy=false;send.disabled=false;
+  if(!matchMedia('(pointer:coarse)').matches)inp.focus();
+}
+$('#f').addEventListener('submit',e=>{e.preventDefault();submit(inp.value)});
+inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing&&!matchMedia('(pointer:coarse)').matches){e.preventDefault();submit(inp.value)}});
+const grow=()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,130)+'px'};
+inp.addEventListener('input',grow);
+
+/* シート */
+const open=v=>document.body.classList.toggle('open',v);
+$('#menu').onclick=()=>{UI.plugins();open(true)};$('#scrim').onclick=()=>open(false);
+$('#clear').onclick=()=>{hist=[];Store.set('hist',[]);log.innerHTML='';open(false);welcome()};
+$('#theme').onclick=()=>{const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches;r.dataset.theme=dark?'light':'dark';Store.set('theme',r.dataset.theme)};
+const th=Store.get('theme',null);if(th)document.documentElement.dataset.theme=th;
+
+/* WebLLM 起動 */
+const bar=$('#aibar'),boot=$('#boot'),sel=$('#model');
+LLM.models.forEach(([id,l])=>{const o=document.createElement('option');o.value=id;o.textContent=l;sel.appendChild(o)});sel.value=LLM.id;
+if(!navigator.gpu){$('#pgt').textContent='WebGPU非対応ブラウザです（ルールベース機能のみ動作）';boot.disabled=true}
+async function startAI(){
+  if(LLM.engine||LLM.loading)return;boot.disabled=true;bar.classList.add('load');$('#pgt').textContent='モデル読み込み中… 0%';
+  try{await LLM.load();NOVA.llmReady=true;bar.classList.remove('load');bar.classList.add('ready');$('#pgi').style.width='0';$('#pgt').textContent='🧠 AI稼働中：'+LLM.label();$('#st').textContent='WebLLM稼働中・端末内で動作';
+    UI.add('bot','🧠 AIを起動しました。何でも話しかけてください！\n（計算・タイマーなどの機能もそのまま使えます）')}
+  catch(e){bar.classList.remove('load');boot.disabled=!navigator.gpu;$('#pgt').textContent='起動に失敗しました';UI.add('bot','AIの起動に失敗しました：'+(e&&e.message||e),['AIを起動'])}
+}
+boot.onclick=startAI;
+sel.onchange=async()=>{LLM.id=sel.value;Store.set('model',LLM.id);if(LLM.engine){try{await LLM.engine.unload()}catch(e){}LLM.engine=null;LLM.history=[];NOVA.llmReady=false;bar.classList.remove('ready');open(false);startAI()}};
+if(navigator.gpu&&Store.get('autoload',false))startAI();
+
+/* キーボード表示時の高さ追従（スマホ） */
+if(window.visualViewport){const f=()=>{document.documentElement.style.setProperty('--vh',visualViewport.height+'px');window.scrollTo(0,0);UI.bottom()};visualViewport.addEventListener('resize',f);f()}
+
+function welcome(){const n=Store.get('name','');UI.add('bot',`こんにちは${n?'、'+n+'さん':''}！NOVAです。\n外部サーバーを使わず、この端末の中だけで動くAIです。`,['できること','今何時？','3分タイマー','12*(3+4)','サイコロ'],false)}
+if(hist.length){hist.forEach(m=>UI.add(m.r,m.t,null,false))}else welcome();
+})();
+</script>
+</body>
+</html>
